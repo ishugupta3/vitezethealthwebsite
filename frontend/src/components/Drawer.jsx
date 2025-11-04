@@ -88,9 +88,16 @@ http://localhost:5174`;
               <div className="h-16 w-16 rounded-full border-4 border-green-500 flex items-center justify-center">
                 <img src={appLogo} alt="ZetHealth Logo" className="h-6 w-14 " />
               </div>
-              <span className="text-lg font-semibold text-gray-900">
-                {isAuthenticated && user ? `${user.user_name || user.name} (${user.number})` : 'Guest'}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold text-gray-900">
+                  {isAuthenticated && user ? `${user.user_name || user.name}` : 'Guest'}
+                </span>
+                {isAuthenticated && user && user.user_mobile && (
+                  <span className="text-sm text-gray-900 font-bold">
+                    {user.user_mobile}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

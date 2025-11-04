@@ -8,6 +8,7 @@ const initialState = {
   token: null,
   loading: false,
   error: null,
+  loginResponse: null, // Store login response for OTP verification
 };
 
 // Async thunks
@@ -17,7 +18,7 @@ export const sendOtp = createAsyncThunk(
     try {
       const response = await apiService.sendOtp(data);
       if (response.status) {
-        return response;
+        return response; // Return full response including last_otp
       } else {
         return rejectWithValue(response.message || 'Failed to send OTP');
       }
@@ -45,16 +46,31 @@ export const sendOtpForRegistration = createAsyncThunk(
 
 export const verifyOtp = createAsyncThunk(
   'auth/verifyOtp',
-  async (data, { rejectWithValue }) => {
-    try {
-      const response = await apiService.verifyOtp(data);
-      if (response.status) {
-        return response;
-      } else {
-        return rejectWithValue(response.message || 'OTP verification failed');
-      }
-    } catch (error) {
-      return rejectWithValue(error.message);
+  async (data, { rejectWithValue, getState }) => {
+    const state = getState();
+    const loginResponse = state.auth.loginResponse;
+
+    if (!loginResponse) {
+      return rejectWithValue('No login response found. Please login first.');
+    }
+
+    const storedOtp = loginResponse.last_otp || loginResponse.user_detail?.last_otp;
+    const enteredOtp = data.otp;
+
+    console.log('Stored OTP:', storedOtp);
+    console.log('Entered OTP:', enteredOtp);
+
+    if (storedOtp && enteredOtp === storedOtp.toString()) {
+      // OTP matches, return the stored login response data
+      return {
+        status: true,
+        message: 'OTP verified successfully',
+        user_detail: loginResponse.user_detail,
+        token: loginResponse.token,
+        last_otp: loginResponse.last_otp
+      };
+    } else {
+      return rejectWithValue('Invalid OTP. Please try again.');
     }
   }
 );
@@ -105,6 +121,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.error = null;
+      state.loginResponse = null; // Clear stored login response
       localStorage.removeItem('token');
       localStorage.removeItem('user_mobile');
     },
@@ -134,6 +151,9 @@ const authSlice = createSlice({
       })
       .addCase(sendOtp.fulfilled, (state, action) => {
         state.loading = false;
+        // Store the login response for OTP verification
+        state.loginResponse = action.payload;
+        console.log('Login response stored:', action.payload);
       })
       .addCase(sendOtp.rejected, (state, action) => {
         state.loading = false;
@@ -147,10 +167,10 @@ const authSlice = createSlice({
         state.loading = false;
         console.log('OTP verification response:', action.payload);
 
-        // Check for user data in different possible response structures
+        // Use the user_detail and token from the payload (which comes from stored login response)
         const payload = action.payload;
-        const userDetail = payload.data?.userDetail || payload.data?.user || payload.userDetail || payload.user || payload.data?.user_detail || payload.user_detail;
-        const token = payload.data?.token || payload.token;
+        const userDetail = payload.user_detail;
+        const token = payload.token;
 
         console.log('Extracted userDetail:', userDetail);
         console.log('Extracted token:', token);
@@ -160,9 +180,11 @@ const authSlice = createSlice({
           state.user = userDetail;
           state.token = token;
           localStorage.setItem('token', token);
-          if (userDetail.userMobile || userDetail.mobile_number) {
-            localStorage.setItem('user_mobile', userDetail.userMobile || userDetail.mobile_number);
+          if (userDetail.user_mobile || userDetail.mobile_number) {
+            localStorage.setItem('user_mobile', userDetail.user_mobile || userDetail.mobile_number);
           }
+          // Clear the stored login response after successful verification
+          state.loginResponse = null;
           console.log('User authenticated successfully');
         } else {
           // If response doesn't contain expected data, treat as error

@@ -8,14 +8,64 @@ import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { homeApi, cartApi } from '../utils/homeApi';
 
+// Default data to avoid duplication
+const defaultCarouselItems = [
+  { image: 'https://apihealth.zethealth.com/images/Slider/1748866325432.jpg', title: 'Super Fast Sample Collection' },
+  { image: 'https://apihealth.zethealth.com/images/Slider/1748866375563.jpg', title: 'Do your full body check up' },
+  { image: 'https://apihealth.zethealth.com/images/Slider/1759156182297.png', title: 'GST Utsav' },
+  { image: 'https://apihealth.zethealth.com/images/Slider/1759156213866.jpg', title: 'Zet Health Navratri' },
+  { image: 'https://apihealth.zethealth.com/images/Slider/1759156234176.jpg', title: 'Home Collection' },
+  { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Diwali Sale' },
+];
+
+const defaultPopularPackages = [
+  {
+    id: 1,
+    name: 'Complete Health Checkup',
+    price: '₹2999',
+    image: '/assets/images/packages/health-checkup.jpg',
+    itemDetail: [
+      { name: 'Blood Test' },
+      { name: 'Urine Test' },
+      { name: 'ECG' },
+      { name: 'X-Ray' },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Diabetes Package',
+    price: '₹1499',
+    image: '/assets/images/packages/diabetes.jpg',
+    itemDetail: [
+      { name: 'Fasting Blood Sugar' },
+      { name: 'HbA1c' },
+      { name: 'Lipid Profile' },
+    ],
+  },
+];
+
+const defaultLifestylePackages = [
+  {
+    id: 3,
+    name: 'Fitness Package',
+    price: '₹1999',
+    image: '/assets/images/packages/fitness.jpg',
+    itemDetail: [
+      { name: 'BMI Check' },
+      { name: 'Body Fat Analysis' },
+      { name: 'Fitness Assessment' },
+    ],
+  },
+];
+
 const Home = () => {
   const [cartItems, setCartItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
-  const [popularPackages, setPopularPackages] = useState([]);
-  const [lifestylePackages, setLifestylePackages] = useState([]);
-  const [carouselItems, setCarouselItems] = useState([]);
+  const [popularPackages, setPopularPackages] = useState(defaultPopularPackages);
+  const [lifestylePackages, setLifestylePackages] = useState(defaultLifestylePackages);
+  const [carouselItems, setCarouselItems] = useState(defaultCarouselItems);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,16 +76,6 @@ const Home = () => {
   const loadHomeData = async () => {
     try {
       setIsLoading(true);
-
-      // Set hardcoded carousel items
-      setCarouselItems([
-        { image: 'https://apihealth.zethealth.com/images/Slider/1748866325432.jpg', title: 'Super Fast Sample Collection' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1748866375563.jpg', title: 'Do your full body check up' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1759156182297.png', title: 'GST Utsav' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1759156213866.jpg', title: 'Zet Health Navratri' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1759156234176.jpg', title: 'Home Collection' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Diwali Sale' },
-      ]);
 
       // Fetch packages data
       const packagesRes = await homeApi.getPackages();
@@ -50,98 +90,9 @@ const Home = () => {
         }));
         setPopularPackages(transformedPackages.slice(0, 2)); // First 2 as popular
         setLifestylePackages(transformedPackages.slice(2, 4)); // Next 2 as lifestyle
-      } else {
-        // Fallback packages
-        setPopularPackages([
-          {
-            id: 1,
-            name: 'Complete Health Checkup',
-            price: '₹2999',
-            image: '/assets/images/packages/health-checkup.jpg',
-            itemDetail: [
-              { name: 'Blood Test' },
-              { name: 'Urine Test' },
-              { name: 'ECG' },
-              { name: 'X-Ray' },
-            ],
-          },
-          {
-            id: 2,
-            name: 'Diabetes Package',
-            price: '₹1499',
-            image: '/assets/images/packages/diabetes.jpg',
-            itemDetail: [
-              { name: 'Fasting Blood Sugar' },
-              { name: 'HbA1c' },
-              { name: 'Lipid Profile' },
-            ],
-          },
-        ]);
-
-        setLifestylePackages([
-          {
-            id: 3,
-            name: 'Fitness Package',
-            price: '₹1999',
-            image: '/assets/images/packages/fitness.jpg',
-            itemDetail: [
-              { name: 'BMI Check' },
-              { name: 'Body Fat Analysis' },
-              { name: 'Fitness Assessment' },
-            ],
-          },
-        ]);
       }
     } catch (error) {
       console.error('Error loading home data:', error);
-      // Set fallback data
-      setCarouselItems([
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Health Checkup' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Lab Tests' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Medical Reports' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Wellness Packages' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Home Collection' },
-        { image: 'https://apihealth.zethealth.com/images/Slider/1760725669273.png', title: 'Online Reports' },
-      ]);
-      setPopularPackages([
-        {
-          id: 1,
-          name: 'Complete Health Checkup',
-          price: '₹2999',
-          image: '/assets/images/packages/health-checkup.jpg',
-          itemDetail: [
-            { name: 'Blood Test' },
-            { name: 'Urine Test' },
-            { name: 'ECG' },
-            { name: 'X-Ray' },
-          ],
-        },
-        {
-          id: 2,
-          name: 'Diabetes Package',
-          price: '₹1499',
-          image: '/assets/images/packages/diabetes.jpg',
-          itemDetail: [
-            { name: 'Fasting Blood Sugar' },
-            { name: 'HbA1c' },
-            { name: 'Lipid Profile' },
-          ],
-        },
-      ]);
-
-      setLifestylePackages([
-        {
-          id: 3,
-          name: 'Fitness Package',
-          price: '₹1999',
-          image: '/assets/images/packages/fitness.jpg',
-          itemDetail: [
-            { name: 'BMI Check' },
-            { name: 'Body Fat Analysis' },
-            { name: 'Fitness Assessment' },
-          ],
-        },
-      ]);
     } finally {
       setIsLoading(false);
     }

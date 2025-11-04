@@ -5,8 +5,7 @@ const PackageCard = ({
   package: pkg,
   isInCart = false,
   onAddToCart,
-  onRemoveFromCart,
-  onViewDetails
+  onRemoveFromCart
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
