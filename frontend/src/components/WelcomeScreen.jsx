@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { slidesData } from "../data/slidesData";
 import SlideCard from "./SlideCard";
+import { setWelcomeSkipped } from "../store/slices/appSlice";
 
 const WelcomeScreen = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { welcomeSkipped } = useSelector((state) => state.app);
   const [current, setCurrent] = useState(0);
 
   const nextSlide = () => {
@@ -16,6 +20,7 @@ const WelcomeScreen = () => {
   };
 
   const skipSlides = () => {
+    dispatch(setWelcomeSkipped(true));
     setCurrent(slidesData.length - 1);
   };
 
@@ -28,12 +33,14 @@ const WelcomeScreen = () => {
     <div className="relative h-screen w-full bg-gradient-to-br from-green-400 via-white to-green-200 flex flex-col justify-between">
       {/* App Bar */}
       <div className="flex justify-end p-2 sm:p-4">
-        <button
-          onClick={skipSlides}
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold text-lg px-4 py-2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-        >
-          Skip
-        </button>
+        {!welcomeSkipped && (
+          <button
+            onClick={skipSlides}
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold text-lg px-4 py-2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+          >
+            Skip
+          </button>
+        )}
       </div>
 
       {/* Slide View */}

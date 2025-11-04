@@ -5,6 +5,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OtpVerify from "./pages/OtpVerify";
+import LocationSelection from "./pages/LocationSelection";
 import Home from "./pages/home";
 import PartnerWithUs from "./pages/PartnerWithUs";
 import ContactUs from "./pages/ContactUs";
@@ -21,6 +22,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/otp" element={<OtpVerify />} />
           <Route path="/verify-otp" element={<OtpVerify />} />
+          <Route path="/location" element={<LocationSelection />} />
           <Route path="/home" element={<Home />} />
           <Route path="/partner" element={<PartnerWithUs />} />
           <Route path="/contact" element={<ContactUs />} />

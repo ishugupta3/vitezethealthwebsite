@@ -8,6 +8,7 @@ const initialState = {
     type: 'info',
     visible: false,
   },
+  welcomeSkipped: false,
 };
 
 // App slice
@@ -35,8 +36,11 @@ const appSlice = createSlice({
         visible: false,
       };
     },
+    setWelcomeSkipped: (state, action) => {
+      state.welcomeSkipped = action.payload;
+    },
   },
 });
 
-export const { setLoading, showToast, hideToast, clearToast } = appSlice.actions;
+export const { setLoading, showToast, hideToast, clearToast, setWelcomeSkipped } = appSlice.actions;
 export default appSlice.reducer;

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import SearchBar from '../components/SearchBar';
@@ -59,6 +61,9 @@ const defaultLifestylePackages = [
 ];
 
 const Home = () => {
+  const navigate = useNavigate();
+  const { selectedLocation } = useSelector((state) => state.location);
+
   const [cartItems, setCartItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -69,9 +74,15 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check if location is selected, if not redirect to location selection
+    if (!selectedLocation) {
+      navigate('/location', { replace: true });
+      return;
+    }
+
     loadHomeData();
     loadCartData();
-  }, []);
+  }, [selectedLocation, navigate]);
 
   const loadHomeData = async () => {
     try {
@@ -169,8 +180,8 @@ const Home = () => {
       {/* Search Bar */}
       <SearchBar
         onSearch={handleSearch}
-        onLocationTap={handleLocationTap}
-        displayAddress="Select Location"
+        onLocationTap={() => navigate('/location')}
+        displayAddress={selectedLocation ? selectedLocation.displayName : "Select Location"}
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
       />

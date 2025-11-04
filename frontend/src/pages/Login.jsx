@@ -23,7 +23,7 @@ const LoginScreen = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/home', { replace: true });
+      navigate('/location', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -97,7 +97,7 @@ const LoginScreen = () => {
 
 
   const handleSkip = () => {
-    navigate("/home");
+    navigate("/location");
   };
 
   return (
