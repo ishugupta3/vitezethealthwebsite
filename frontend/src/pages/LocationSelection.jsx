@@ -13,6 +13,7 @@ import LocationCard from '../components/LocationCard';
 import Button from '../components/Button';
 import useCurrentAddress from '../hooks/useCurrentAddress';
 
+
 const LocationSelection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -25,10 +26,42 @@ const LocationSelection = () => {
     error: locationError
   } = useSelector((state) => state.location);
 
+  const { currentLocation, setcurrentLocation } = useCurrentLocation();
+>>>>>>> Stashed changes
+=======
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCity, setExpandedCity] = useState(null);
   const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
   const [showComingSoon, setShowComingSoon] = useState(false);
+=======
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCity, setExpandedCity] = useState(null);
+  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+=======
+  const { currentLocation, setcurrentLocation } = useCurrentLocation();
+>>>>>>> Stashed changes
+=======
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCity, setExpandedCity] = useState(null);
+  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+=======
+  const { currentLocation, setcurrentLocation } = useCurrentLocation();
+>>>>>>> Stashed changes
+=======
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCity, setExpandedCity] = useState(null);
+  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+=======
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCity, setExpandedCity] = useState(null);
+  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+=======
+  const { currentLocation, setcurrentLocation } = useCurrentLocation();
+>>>>>>> Stashed changes
 
   useEffect(() => {
     // Load persisted location on component mount
@@ -108,7 +141,11 @@ const LocationSelection = () => {
             <FaClose className="text-gray-600" />
           </button>
           <div className="text-center">
+<<<<<<< Updated upstream
             <p className="text-lg font-semibold text-gray-900">Select Location</p>
+=======
+            <p className="text-lg font-semibold text-gray-900">{currentLocation}</p>
+>>>>>>> Stashed changes
           </div>
           <div className="w-10"></div> {/* Spacer for centering */}
         </div>
