@@ -1,13 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Carousel = ({ items = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const slideRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === items.length - 1 ? 0 : prevIndex + 1
-      );
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+        if (nextIndex >= items.length) {
+          // Reset to 0 without animation
+          setTimeout(() => {
+            if (slideRef.current) {
+              slideRef.current.style.transition = 'none';
+              setCurrentIndex(0);
+              setTimeout(() => {
+                if (slideRef.current) {
+                  slideRef.current.style.transition = 'transform 0.5s ease-in-out';
+                }
+              }, 50);
+            }
+          }, 500); // After transition duration
+          return prevIndex; // Keep current for smooth transition
+        }
+        return nextIndex;
+      });
     }, 3000);
 
     return () => clearInterval(timer);
@@ -24,6 +41,7 @@ const Carousel = ({ items = [] }) => {
   return (
     <div className="relative w-full overflow-hidden rounded-lg">
       <div
+        ref={slideRef}
         className="flex transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
@@ -47,7 +65,7 @@ const Carousel = ({ items = [] }) => {
           <button
             key={index}
             className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-white' : 'bg-white/50'
+              index === currentIndex % items.length ? 'bg-white' : 'bg-white/50'
             }`}
             onClick={() => setCurrentIndex(index)}
           />
