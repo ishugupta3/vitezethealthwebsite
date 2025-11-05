@@ -21,18 +21,59 @@ const LocationSelection = () => {
     availableCities,
     detectedLocation,
     selectedLocation,
-    loading,
-    error
+    loading: locationLoading,
+    error: locationError
   } = useSelector((state) => state.location);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCity, setExpandedCity] = useState(null);
-  const { currentAddress } = useCurrentAddress();
+  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   useEffect(() => {
     // Load persisted location on component mount
     dispatch(loadPersistedLocation());
   }, [dispatch, navigate]);
+
+  useEffect(() => {
+    // Check if current address is in available cities
+    if (currentAddress && currentAddress !== 'Select Location') {
+      const availableCityNames = Object.values(availableCities).map(city => city.name.toLowerCase());
+      const availableSubLocations = Object.values(availableCities).flatMap(city => city.subLocations.map(sub => sub.toLowerCase()));
+
+      const addressLower = currentAddress.toLowerCase();
+      const isAvailable = availableCityNames.some(city => addressLower.includes(city)) ||
+                         availableSubLocations.some(sub => addressLower.includes(sub));
+
+      if (!isAvailable) {
+        setShowComingSoon(true);
+      } else {
+        // If available, set the location and navigate to home
+        // Find the matching city and sublocation
+        let matchedCityKey = null;
+        let matchedSubLocation = null;
+
+        for (const [cityKey, cityData] of Object.entries(availableCities)) {
+          if (addressLower.includes(cityData.name.toLowerCase())) {
+            matchedCityKey = cityKey;
+            matchedSubLocation = cityData.name; // Default to city name
+            break;
+          }
+          const matchingSub = cityData.subLocations.find(sub => addressLower.includes(sub.toLowerCase()));
+          if (matchingSub) {
+            matchedCityKey = cityKey;
+            matchedSubLocation = matchingSub;
+            break;
+          }
+        }
+
+        if (matchedCityKey && matchedSubLocation) {
+          dispatch(setLocation({ cityKey: matchedCityKey, subLocation: matchedSubLocation }));
+          navigate('/home');
+        }
+      }
+    }
+  }, [currentAddress, availableCities, dispatch, navigate]);
 
   const handleDetectLocation = () => {
     dispatch(clearError());
@@ -67,7 +108,7 @@ const LocationSelection = () => {
             <FaClose className="text-gray-600" />
           </button>
           <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">{currentAddress}</p>
+            <p className="text-lg font-semibold text-gray-900">Select Location</p>
           </div>
           <div className="w-10"></div> {/* Spacer for centering */}
         </div>
@@ -80,7 +121,7 @@ const LocationSelection = () => {
             <FaSearch className="text-gray-400 mr-3" />
             <input
               type="text"
-              placeholder="Search for a city..."
+              placeholder={currentAddress || "Search for a city..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent outline-none text-gray-700"
@@ -100,10 +141,10 @@ const LocationSelection = () => {
         <div className="text-center">
           <button
             onClick={handleDetectLocation}
-            disabled={loading}
+            disabled={locationLoading}
             className="text-red-500 font-medium hover:text-red-700 underline text-sm"
           >
-            {loading ? 'Detecting Location...' : 'Detect My Location'}
+            {locationLoading ? 'Detecting Location...' : 'Detect My Location'}
           </button>
         </div>
 
@@ -150,6 +191,23 @@ const LocationSelection = () => {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Coming Soon Message */}
+        {showComingSoon && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Coming Soon to Your City!</h3>
+            <p className="text-yellow-700 text-sm">
+              We're currently available in Delhi, Mumbai, Bangalore, Hyderabad, and Odisha.
+              Stay tuned as we expand to more cities soon!
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="mt-3 text-yellow-600 hover:text-yellow-800 underline text-sm"
+            >
+              Choose from available cities
+            </button>
           </div>
         )}
 

@@ -35,13 +35,24 @@ const Header = () => {
       <header className="bg-green-200 shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <img
-                src={logoimage}
-                alt="ZetHealth Logo"
-                className="h-12 w-auto "
-              />
+            {/* Left side: Hamburger and Logo */}
+            <div className="flex items-center">
+              <button
+                onClick={toggleDrawer}
+                className="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100 mr-4"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <div className="flex-shrink-0">
+                <img
+                  src={logoimage}
+                  alt="ZetHealth Logo"
+                  className="h-12 w-auto "
+                />
+              </div>
             </div>
 
             {/* Menu Bar - Hidden on mobile */}
@@ -76,29 +87,7 @@ const Header = () => {
               >
                 {isAuthenticated && user ? user.user_name || user.name : 'Profile'}
               </button>
-
-              {/* Hamburger menu button for desktop */}
-              <button
-                onClick={toggleDrawer}
-                className="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
             </nav>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={toggleDrawer}
-                className="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
       </header>

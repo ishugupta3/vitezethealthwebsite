@@ -238,16 +238,18 @@ const Home = () => {
                 </button>
               </div>
 
-              {popularPackages.map((pkg) => (
-                <PackageCard
-                  key={pkg.id}
-                  package={pkg}
-                  isInCart={isInCart(pkg.id)}
-                  onAddToCart={handleAddToCart}
-                  onRemoveFromCart={handleRemoveFromCart}
-                  onViewDetails={() => showToast('View details coming soon')}
-                />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {popularPackages.map((pkg) => (
+                  <PackageCard
+                    key={pkg.id}
+                    package={pkg}
+                    isInCart={isInCart(pkg.id)}
+                    onAddToCart={handleAddToCart}
+                    onRemoveFromCart={handleRemoveFromCart}
+                    onViewDetails={() => showToast('View details coming soon')}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Lifestyle Packages */}
@@ -261,16 +263,18 @@ const Home = () => {
                 </button>
               </div>
 
-              {lifestylePackages.map((pkg) => (
-                <PackageCard
-                  key={pkg.id}
-                  package={pkg}
-                  isInCart={isInCart(pkg.id)}
-                  onAddToCart={handleAddToCart}
-                  onRemoveFromCart={handleRemoveFromCart}
-                  onViewDetails={() => showToast('View details coming soon')}
-                />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {lifestylePackages.map((pkg) => (
+                  <PackageCard
+                    key={pkg.id}
+                    package={pkg}
+                    isInCart={isInCart(pkg.id)}
+                    onAddToCart={handleAddToCart}
+                    onRemoveFromCart={handleRemoveFromCart}
+                    onViewDetails={() => showToast('View details coming soon')}
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}

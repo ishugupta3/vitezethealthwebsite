@@ -1,21 +1,52 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { setManualLocation } from '../store/slices/locationSlice';
+import { useState, useEffect } from 'react';
 
 const useCurrentAddress = () => {
-  const dispatch = useDispatch();
-  const { selectedLocation, detectedLocation } = useSelector((state) => state.location);
+  const [currentAddress, setCurrentAddress] = useState('Select Location');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Determine current location: prefer selected, fallback to detected
-  const currentLocation = selectedLocation?.subLocation || detectedLocation?.subLocation || 'Select Location';
+  useEffect(() => {
+    // Try to load from localStorage first
+    const savedAddress = localStorage.getItem("current_address");
+    if (savedAddress) {
+      setCurrentAddress(savedAddress);
+      return;
+    }
 
-  const setcurrentLocation = (location) => {
-    dispatch(setManualLocation(location));
-  };
+    // If not in localStorage, fetch location
+    if ("geolocation" in navigator) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
 
-  return {
-    currentLocation,
-    setcurrentLocation
-  };
+          try {
+            // Reverse geocode using OpenStreetMap's API
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
+            const data = await response.json();
+
+            const address = data.display_name || "Unable to fetch address";
+            setCurrentAddress(address);
+            localStorage.setItem("current_address", address); // save it
+          } catch (err) {
+            setError("Failed to fetch address");
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          setError(err.message);
+          setLoading(false);
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by your browser.");
+    }
+  }, []);
+
+  return { currentAddress, loading, error };
 };
 
 export default useCurrentAddress;
