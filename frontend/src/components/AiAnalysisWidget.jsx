@@ -66,7 +66,7 @@ const AnimatedButton = ({ onTap }) => {
       </div>
 
       {/* Inner button */}
-      <div className="relative bg-gradient-to-r from-green-600 to-blue-600 rounded-full px-6 py-3 shadow-lg overflow-hidden">
+      <div className="relative bg-gradient-to-r from-green-600 to-blue-600 rounded-full px-4 py-2 sm:px-6 sm:py-3 shadow-lg overflow-hidden">
         {/* Shimmer effect */}
         <div
           className="absolute inset-0 rounded-full opacity-30"
@@ -97,19 +97,19 @@ const AiAnalysisWidget = ({ onUploadClick }) => {
     <div className="mx-4 my-6">
       <div className="bg-gradient-to-br from-white to-green-200 rounded-3xl p-6 shadow-xl border border-white/30">
         {/* Logo and Content */}
-        <div className="flex items-start">
+        <div className="flex flex-col sm:flex-row items-start">
           {/* Logo */}
-          <div className="mr-4 -ml-2">
+          <div className="mr-4 -ml-2 mb-4 sm:mb-0">
             <img
               src={photo}
               alt="ZetGenie AI"
-              className="w-24 h-40 object-contain"
+              className="w-16 h-20 sm:w-20 sm:h-28 md:w-24 md:h-32 lg:w-24 lg:h-40 object-contain"
             />
           </div>
 
           {/* Text Content */}
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-green-600 mb-1">
+            <h3 className="text-lg sm:text-xl font-bold text-green-600 mb-1">
               AI Medical <span className="text-gray-700">Analysis</span>
             </h3>
             <p className="text-gray-600 text-sm mb-4 leading-relaxed">

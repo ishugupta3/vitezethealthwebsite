@@ -4,27 +4,27 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 const AVAILABLE_CITIES = {
   delhi: {
     name: 'Delhi',
-    image: '/assets/images/delhi.jpg',
+    image: '/assets/images/delhi.png',
     subLocations: ['Delhi', 'Gurgaon', 'Noida', 'Greater Noida', 'Gaziabad', 'Faridabad']
   },
   mumbai: {
     name: 'Mumbai',
-    image: '/assets/images/mumbai.jpg',
+    image: '/assets/images/mumbai.png',
     subLocations: ['Mumbai West', 'Mumbai South', 'Mumbai Central', 'Navi Mumbai', 'Thane']
   },
   bangalore: {
     name: 'Bangalore',
-    image: '/assets/images/bangalore.jpg',
+    image: '/assets/images/banglore.png',
     subLocations: ['Bangalore North', 'Bangalore South', 'Bangalore East', 'Bangalore West', 'Electronic City']
   },
   hyderabad: {
     name: 'Hyderabad',
-    image: '/assets/images/hyderabad.jpg',
+    image: '/assets/images/hydrabad.png',
     subLocations: ['Hyderabad Central', 'Secunderabad', 'Gachibowli', 'Kukatpally', 'Hitech City']
   },
   odisha: {
     name: 'Odisha',
-    image: '/assets/images/odisha.jpg',
+    image: '/assets/images/odisha.png',
     subLocations: ['Bhubaneswar', 'Cuttack', 'Puri', 'Rourkela', 'Berhampur']
   }
 };

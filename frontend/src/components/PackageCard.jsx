@@ -23,9 +23,9 @@ const PackageCard = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-4 shadow-lg border border-gray-100 mb-4">
+    <div className="bg-white rounded-3xl p-4 shadow-lg border border-gray-100 mb-4 h-full flex flex-col">
       {/* Image and Content Row */}
-      <div className="flex mb-4">
+      <div className="flex mb-4 flex-1">
         {/* Image */}
         <div className="flex-1 mr-4">
           <img
