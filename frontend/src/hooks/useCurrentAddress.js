@@ -6,14 +6,14 @@ const useCurrentAddress = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Try to load from localStorage first
-    const savedAddress = localStorage.getItem("current_address");
+    // Try to load from sessionStorage first
+    const savedAddress = sessionStorage.getItem("current_address");
     if (savedAddress) {
       setCurrentAddress(savedAddress);
       return;
     }
 
-    // If not in localStorage, fetch location
+    // If not in sessionStorage, fetch location
     if ("geolocation" in navigator) {
       setLoading(true);
       navigator.geolocation.getCurrentPosition(
@@ -29,7 +29,7 @@ const useCurrentAddress = () => {
 
             const address = data.display_name || "Unable to fetch address";
             setCurrentAddress(address);
-            localStorage.setItem("current_address", address); // save it
+            sessionStorage.setItem("current_address", address); // save it
           } catch (err) {
             setError("Failed to fetch address");
           } finally {

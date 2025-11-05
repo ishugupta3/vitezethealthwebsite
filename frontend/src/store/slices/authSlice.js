@@ -114,7 +114,7 @@ const authSlice = createSlice({
     },
     setToken: (state, action) => {
       state.token = action.payload;
-      localStorage.setItem('token', action.payload);
+      sessionStorage.setItem('token', action.payload);
     },
     clearAuth: (state) => {
       state.isAuthenticated = false;
@@ -122,8 +122,8 @@ const authSlice = createSlice({
       state.token = null;
       state.error = null;
       state.loginResponse = null; // Clear stored login response
-      localStorage.removeItem('token');
-      localStorage.removeItem('user_mobile');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user_mobile');
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -132,8 +132,8 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
     initializeAuth: (state) => {
-      const token = localStorage.getItem('token');
-      const userMobile = localStorage.getItem('user_mobile');
+      const token = sessionStorage.getItem('token');
+      const userMobile = sessionStorage.getItem('user_mobile');
 
       if (token && userMobile) {
         state.token = token;
@@ -179,9 +179,9 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           state.user = userDetail;
           state.token = token;
-          localStorage.setItem('token', token);
+          sessionStorage.setItem('token', token);
           if (userDetail.user_mobile || userDetail.mobile_number) {
-            localStorage.setItem('user_mobile', userDetail.user_mobile || userDetail.mobile_number);
+            sessionStorage.setItem('user_mobile', userDetail.user_mobile || userDetail.mobile_number);
           }
           // Clear the stored login response after successful verification
           state.loginResponse = null;
@@ -225,8 +225,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user_mobile');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user_mobile');
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
@@ -235,8 +235,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user_mobile');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user_mobile');
       });
   },
 });

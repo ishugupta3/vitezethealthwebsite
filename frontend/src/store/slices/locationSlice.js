@@ -122,8 +122,8 @@ const locationSlice = createSlice({
           displayName: subLocation ? `${subLocation}, ${cityData.name}` : cityData.name
         };
         state.error = null;
-        // Persist to localStorage
-        localStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
+        // Persist to sessionStorage
+        sessionStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
       }
     },
     setManualLocation: (state, action) => {
@@ -135,19 +135,19 @@ const locationSlice = createSlice({
         displayName: location
       };
       state.error = null;
-      localStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
+      sessionStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
     },
     clearLocation: (state) => {
       state.selectedLocation = null;
       state.detectedLocation = null;
       state.error = null;
-      localStorage.removeItem('selectedLocation');
+      sessionStorage.removeItem('selectedLocation');
     },
     setLocationRequired: (state, action) => {
       state.locationRequired = action.payload;
     },
     loadPersistedLocation: (state) => {
-      const persisted = localStorage.getItem('selectedLocation');
+      const persisted = sessionStorage.getItem('selectedLocation');
       if (persisted) {
         try {
           state.selectedLocation = JSON.parse(persisted);
@@ -181,8 +181,8 @@ const locationSlice = createSlice({
             displayName: action.payload.city
           };
           state.error = null;
-          // Persist to localStorage
-          localStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
+          // Persist to sessionStorage
+          sessionStorage.setItem('selectedLocation', JSON.stringify(state.selectedLocation));
         } else {
           state.error = 'Service is not available in your current location';
         }
