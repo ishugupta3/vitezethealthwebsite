@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaMapMarkerAlt, FaTimes, FaTimes as FaClose } from 'react-icons/fa';
+import { FaLocationCrosshairs } from 'react-icons/fa6';
 import {
   detectLocation,
   setLocation,
@@ -11,7 +12,6 @@ import {
 } from '../store/slices/locationSlice';
 import LocationCard from '../components/LocationCard';
 import Button from '../components/Button';
-import useCurrentAddress from '../hooks/useCurrentAddress';
 
 
 const LocationSelection = () => {
@@ -27,8 +27,6 @@ const LocationSelection = () => {
   } = useSelector((state) => state.location);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCity, setExpandedCity] = useState(null);
-  const { currentAddress, loading: addressLoading, error: addressError } = useCurrentAddress();
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   useEffect(() => {
@@ -36,45 +34,7 @@ const LocationSelection = () => {
     dispatch(loadPersistedLocation());
   }, [dispatch, navigate]);
 
-  useEffect(() => {
-    // Check if current address is in available cities
-    if (currentAddress && currentAddress !== 'Select Location') {
-      const availableCityNames = Object.values(availableCities).map(city => city.name.toLowerCase());
-      const availableSubLocations = Object.values(availableCities).flatMap(city => city.subLocations.map(sub => sub.toLowerCase()));
-
-      const addressLower = currentAddress.toLowerCase();
-      const isAvailable = availableCityNames.some(city => addressLower.includes(city)) ||
-                         availableSubLocations.some(sub => addressLower.includes(sub));
-
-      if (!isAvailable) {
-        setShowComingSoon(true);
-      } else {
-        // If available, set the location and navigate to home
-        // Find the matching city and sublocation
-        let matchedCityKey = null;
-        let matchedSubLocation = null;
-
-        for (const [cityKey, cityData] of Object.entries(availableCities)) {
-          if (addressLower.includes(cityData.name.toLowerCase())) {
-            matchedCityKey = cityKey;
-            matchedSubLocation = cityData.name; // Default to city name
-            break;
-          }
-          const matchingSub = cityData.subLocations.find(sub => addressLower.includes(sub.toLowerCase()));
-          if (matchingSub) {
-            matchedCityKey = cityKey;
-            matchedSubLocation = matchingSub;
-            break;
-          }
-        }
-
-        if (matchedCityKey && matchedSubLocation) {
-          dispatch(setLocation({ cityKey: matchedCityKey, subLocation: matchedSubLocation }));
-          navigate('/home');
-        }
-      }
-    }
-  }, [currentAddress, availableCities, dispatch, navigate]);
+  // Removed the useEffect that automatically detects and sets location
 
   const handleDetectLocation = () => {
     dispatch(clearError());
@@ -86,25 +46,32 @@ const LocationSelection = () => {
     navigate('/home');
   };
 
-  const handleCityToggle = (cityKey) => {
-    setExpandedCity(expandedCity === cityKey ? null : cityKey);
+  const handleClose = () => {
+    if (selectedLocation) {
+      // If location is already selected, go directly to home
+      navigate('/home');
+    } else {
+      // If no location selected, set default to Delhi and go to home
+      dispatch(setLocation({ cityKey: 'delhi', subLocation: 'Delhi' }));
+      navigate('/home');
+    }
   };
 
   const filteredCities = Object.keys(availableCities).filter(cityKey => {
     const cityName = availableCities[cityKey].name;
-    const subLocations = availableCities[cityKey].subLocations;
     const query = searchQuery.toLowerCase();
-    return cityName.toLowerCase().includes(query) || subLocations.some(sub => sub.toLowerCase().includes(query));
+    return cityName.toLowerCase().includes(query);
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-green-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => navigate('/home')}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            onClick={handleClose}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="p-2 rounded-md bg-white text-gray-600 shadow-lg shadow-green-300 active:shadow-none focus:outline-none transition-all duration-200"
           >
             <FaClose className="text-gray-600" />
           </button>
@@ -122,7 +89,7 @@ const LocationSelection = () => {
             <FaSearch className="text-gray-400 mr-3" />
             <input
               type="text"
-              placeholder={currentAddress || "Search for a city..."}
+              placeholder="Search for a city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent outline-none text-gray-700"
@@ -143,8 +110,9 @@ const LocationSelection = () => {
           <button
             onClick={handleDetectLocation}
             disabled={locationLoading}
-            className="text-red-500 font-medium hover:text-red-700 underline text-sm"
+            className="text-red-500 font-medium hover:text-red-700 underline text-sm flex items-center justify-center"
           >
+            <FaLocationCrosshairs className="mr-2" />
             {locationLoading ? 'Detecting Location...' : 'Detect My Location'}
           </button>
         </div>
@@ -152,16 +120,16 @@ const LocationSelection = () => {
 
 
         {/* All Cities Grid */}
-        <div>
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">All Cities</h3>
           <div className="grid grid-cols-3 gap-4">
-            {Object.keys(availableCities).map((cityKey) => (
+            {filteredCities.map((cityKey) => (
               <button
                 key={cityKey}
-                onClick={() => handleCityToggle(cityKey)}
-                className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center hover:shadow-md transition-shadow"
+                onClick={() => handleLocationSelect(cityKey, availableCities[cityKey].name)}
+                className="bg-white rounded-lg p-4 flex flex-col items-center hover:bg-green-100 transition-colors"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 mb-2">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-500 mb-2">
                   <img
                     src={availableCities[cityKey].image}
                     alt={availableCities[cityKey].name}
@@ -177,23 +145,7 @@ const LocationSelection = () => {
           </div>
         </div>
 
-        {/* Expanded Sub-locations */}
-        {expandedCity && (
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h4 className="text-md font-semibold text-gray-900 mb-3">{availableCities[expandedCity].name} Locations</h4>
-            <div className="space-y-2">
-              {availableCities[expandedCity].subLocations.map((subLocation, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleLocationSelect(expandedCity, subLocation)}
-                  className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <span className="text-gray-700 font-medium">{subLocation}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Coming Soon Message */}
         {showComingSoon && (
@@ -215,11 +167,7 @@ const LocationSelection = () => {
         {/* Skip Button */}
         <div className="text-center">
           <button
-            onClick={() => {
-              // Set default location to Delhi
-              dispatch(setLocation({ cityKey: 'delhi', subLocation: 'Delhi' }));
-              navigate('/home');
-            }}
+            onClick={handleClose}
             className="text-gray-500 text-sm hover:text-gray-700 underline"
           >
             Skip for now (Delhi will be selected)

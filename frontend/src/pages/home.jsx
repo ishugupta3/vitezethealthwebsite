@@ -181,7 +181,7 @@ const Home = () => {
       <SearchBar
         onSearch={handleSearch}
         onLocationTap={() => navigate('/location')}
-        displayAddress={selectedLocation ? selectedLocation.displayName : "Select Location"}
+        displayAddress={selectedLocation ? selectedLocation.name : "Detect My Location"}
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
       />

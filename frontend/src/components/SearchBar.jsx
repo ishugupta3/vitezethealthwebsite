@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { FaSearch, FaCamera, FaFilePdf, FaTimes } from 'react-icons/fa';
-import { FaLocationDot } from 'react-icons/fa6';
+import { FaSearch, FaCamera, FaFilePdf, FaTimes, FaUpload } from 'react-icons/fa';
+import { FaLocationDot, FaLocationCrosshairs } from 'react-icons/fa6';
 
 const SearchBar = ({
   onSearch,
@@ -39,6 +39,7 @@ const SearchBar = ({
           onClick={onLocationTap}
           className="flex-1 flex items-center bg-gray-50 rounded-full px-4 py-2 mr-3 border border-gray-200"
         >
+          <FaLocationCrosshairs className="text-blue-500 mr-2 flex-shrink-0" />
           <span className="flex-1 text-left text-sm text-gray-700 truncate">
             {displayAddress}
           </span>
@@ -87,7 +88,7 @@ const SearchBar = ({
           onClick={handleUploadPrescription}
           className="bg-blue-500 text-white p-2 rounded-full ml-2"
         >
-          <FaFilePdf className="text-sm" />
+          <FaUpload className="text-sm" />
         </button>
       </div>
     </div>

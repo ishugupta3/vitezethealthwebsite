@@ -2,6 +2,11 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 // Available cities and their sub-locations
 const AVAILABLE_CITIES = {
+  bangalore: {
+    name: 'Bangalore',
+    image: '/assets/images/banglore.png',
+    subLocations: ['Bangalore North', 'Bangalore South', 'Bangalore East', 'Bangalore West', 'Electronic City']
+  },
   delhi: {
     name: 'Delhi',
     image: '/assets/images/delhi.png',
@@ -11,11 +16,6 @@ const AVAILABLE_CITIES = {
     name: 'Mumbai',
     image: '/assets/images/mumbai.png',
     subLocations: ['Mumbai West', 'Mumbai South', 'Mumbai Central', 'Navi Mumbai', 'Thane']
-  },
-  bangalore: {
-    name: 'Bangalore',
-    image: '/assets/images/banglore.png',
-    subLocations: ['Bangalore North', 'Bangalore South', 'Bangalore East', 'Bangalore West', 'Electronic City']
   },
   hyderabad: {
     name: 'Hyderabad',

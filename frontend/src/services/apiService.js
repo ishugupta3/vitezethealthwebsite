@@ -309,9 +309,16 @@ class ApiService {
   }
 
   // CMS APIs
-  async getCmsContent(type) {
+  async getCmsContent(slug) {
     try {
-      const response = await api.get(`${BackendEndpoints.CMS}?type=${type}`);
+      // Use direct axios call without authentication for CMS content
+      const response = await axios.post(`${BASE_URL}${BackendEndpoints.CMS}`, { slug }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        timeout: 30000,
+      });
       return response.data;
     } catch (error) {
       throw this.handleError(error);

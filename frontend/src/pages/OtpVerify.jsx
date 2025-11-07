@@ -47,7 +47,7 @@ export default function OtpVerify() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/home");
+      navigate("/location");
     }
   }, [isAuthenticated, navigate]);
 

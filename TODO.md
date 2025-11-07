@@ -1,7 +1,5 @@
-# TODO: Replace localStorage with sessionStorage for session-based data persistence
+# TODO: Hide Footer on Welcome Page
 
-## Steps to Complete:
-- [x] Edit frontend/src/store/slices/authSlice.js to replace all localStorage with sessionStorage
-- [x] Edit frontend/src/store/slices/locationSlice.js to replace all localStorage with sessionStorage
-- [x] Edit frontend/src/hooks/useCurrentAddress.js to replace all localStorage with sessionStorage
-- [ ] Test the changes to ensure data clears on new browser session
+- [x] Edit frontend/src/App.jsx to import useLocation from react-router-dom
+- [x] Modify App.jsx to conditionally render Footer only when pathname !== "/"
+- [ ] Run the development server to verify footer is hidden on welcome page but visible on other pages

@@ -84,8 +84,10 @@ const LoginScreen = () => {
       if (errorMessage.includes('not registered') ||
           errorMessage.includes('user not found') ||
           errorMessage.includes('signup') ||
-          errorMessage.includes('register')) {
-        // Redirect to register page with mobile number
+          errorMessage.includes('register') ||
+          errorMessage.includes('does not exist')) {
+        // Clear error and redirect to register page with mobile number
+        dispatch(setError(null));
         navigate('/register', { state: { mobile: formData.mobile } });
       } else {
         // Error is handled by the reducer for other cases
@@ -125,9 +127,8 @@ const LoginScreen = () => {
               {error}
             </div>
           )}
-          <InputField label="Enter Your Mobile Number" value={formData.mobile} onChange={handleInputChange} showCountryCode />
+          <InputField label="Mobile Number" value={formData.mobile} onChange={handleInputChange} showCountryCode />
           <div className="flex space-x-4">
-            <Button title="New User" onClick={() => navigate('/register')} className="flex-1" />
             <Button title="Submit →" onClick={handleSubmit} loading={loading} className="flex-1" />
           </div>
         </form>
