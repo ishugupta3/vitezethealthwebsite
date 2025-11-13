@@ -9,6 +9,7 @@ import PackageCard from '../components/PackageCard';
 import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { homeApi, cartApi } from '../utils/homeApi';
+import { apiService } from '../services/apiService';
 
 // Default data to avoid duplication
 const defaultCarouselItems = [
@@ -88,22 +89,41 @@ const Home = () => {
     try {
       setIsLoading(true);
 
-      // Fetch packages data
-      const packagesRes = await homeApi.getPackages();
-      if (packagesRes.status && packagesRes.result) {
-        // Transform packages data
-        const transformedPackages = packagesRes.result.map(pkg => ({
+      // Fetch popular packages from new API
+      const cityName = 'delhi';
+      const popularPackagesRes = await apiService.getPopularPackages(cityName);
+
+      if (popularPackagesRes.success && popularPackagesRes.data) {
+        // Transform API data to match PackageCard format
+        const transformedPackages = popularPackagesRes.data.map(pkg => ({
           id: pkg.id,
           name: pkg.name,
           price: `₹${pkg.price}`,
-          image: pkg.image || '/assets/images/packages/default.jpg',
-          itemDetail: pkg.tests ? pkg.tests.map(test => ({ name: test.name })) : [],
+          image: pkg.image,
+          itemDetail: pkg.itemDetail ? pkg.itemDetail.split(';').map(item => ({ name: item.trim() })) : [],
+          type: pkg.type,
+          description: pkg.description,
+          testTime: pkg.testTime,
+          labName: pkg.labName,
+          labAddress: pkg.labAddress
         }));
-        setPopularPackages(transformedPackages.slice(0, 2)); // First 2 as popular
-        setLifestylePackages(transformedPackages.slice(2, 4)); // Next 2 as lifestyle
+
+        // Filter packages by type
+        const popular = transformedPackages.filter(pkg => pkg.type === 'Popular');
+        const lifestyle = transformedPackages.filter(pkg => pkg.type === 'Lifestyle');
+
+        setPopularPackages(popular);
+        setLifestylePackages(lifestyle);
+      } else {
+        // Fallback to default data if API fails
+        setPopularPackages(defaultPopularPackages);
+        setLifestylePackages(defaultLifestylePackages);
       }
     } catch (error) {
       console.error('Error loading home data:', error);
+      // Fallback to default data
+      setPopularPackages(defaultPopularPackages);
+      setLifestylePackages(defaultLifestylePackages);
     } finally {
       setIsLoading(false);
     }
@@ -119,15 +139,40 @@ const Home = () => {
     showToast('Location selection coming soon');
   };
 
-  const handleSearch = (query) => {
+  const handleSearch = async (query) => {
     setSearchQuery(query);
     if (query.trim()) {
       setIsSearching(true);
-      // Mock search results - replace with actual API
-      setSearchResults([
-        { id: 1, name: 'Blood Test', type: 'test', price: '₹500' },
-        { id: 2, name: 'Diabetes Package', type: 'package', price: '₹1499' },
-      ]);
+      try {
+        const cityName = selectedLocation ? selectedLocation.name : 'delhi';
+        console.log('Searching for:', query, 'in city:', cityName);
+        const response = await apiService.searchTests(query, cityName);
+        console.log('Search API Response:', response);
+
+        if (response && response.radiology_tests && response.radiology_tests.length > 0) {
+          // Transform API response to match our UI format
+          const transformedResults = response.radiology_tests.map(test => {
+            // Find the lowest price from labs
+            const lowestPrice = Math.min(...test.labs.map(lab => lab.price));
+            return {
+              id: test.id,
+              name: test.name,
+              type: 'radiology',
+              price: `₹${lowestPrice}`,
+              originalPrice: lowestPrice,
+              labs: test.labs
+            };
+          });
+          console.log('Transformed results:', transformedResults);
+          setSearchResults(transformedResults);
+        } else {
+          console.log('No radiology tests found');
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Error searching tests:', error);
+        setSearchResults([]);
+      }
     } else {
       setIsSearching(false);
       setSearchResults([]);
@@ -175,16 +220,49 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header />
-
-      {/* Search Bar */}
-      <SearchBar
-        onSearch={handleSearch}
+      <Header
         onLocationTap={() => navigate('/location')}
         displayAddress={selectedLocation ? selectedLocation.name : "Detect My Location"}
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
       />
+
+      {/* Search Bar */}
+      <div className="px-4 py-4 md:hidden">
+        <SearchBar
+          onSearch={handleSearch}
+        />
+      </div>
+
+      {/* Pathology and Radiology Cards */}
+      <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', padding: '16px' }}>
+        {/* Pathology Card */}
+        <div
+          style={{ background: '#eadcf7', borderRadius: '16px', width: '250px', padding: '24px', cursor: 'pointer' }}
+          onClick={() => navigate('/pathology')}
+        >
+          <h2 style={{ color: '#404040', fontSize: '1.5em', margin: '0' }}>Pathology</h2>
+          <p style={{ color: '#6b6b6b', margin: '10px 0 20px 0' }}>Lab Tests, Profiles & Packages</p>
+          {/* Pathology Icon (Example SVG, insert relevant image if available) */}
+          <svg width="48" height="48" style={{ display: 'block', margin: 'auto' }}>
+            {/* Example content: microscope icon */}
+            <circle cx="24" cy="24" r="20" fill="#d1b3ee" />
+            {/* Add further SVG elements for details */}
+          </svg>
+        </div>
+
+        {/* Radiology Card */}
+        <div style={{ background: '#fff5cc', borderRadius: '16px', width: '250px', padding: '24px' }}>
+          <h2 style={{ color: '#404040', fontSize: '1.5em', margin: '0' }}>Radiology</h2>
+          <p style={{ color: '#6b6b6b', margin: '10px 0 20px 0' }}>Scans & Imaging</p>
+          {/* Radiology Icon (Example SVG, insert relevant image if available) */}
+          <svg width="48" height="48" style={{ display: 'block', margin: 'auto' }}>
+            {/* Example content: scan table */}
+            <rect x="8" y="24" width="32" height="12" fill="#a09cd6" />
+            {/* Add further SVG elements for details */}
+          </svg>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="pb-24 pt-20">
@@ -192,29 +270,35 @@ const Home = () => {
           // Search Results
           <div className="px-4 py-4">
             <h2 className="text-lg font-semibold mb-4">Search Results</h2>
-            {searchResults.map((item) => (
-              <div key={item.id} className="bg-white rounded-lg p-4 mb-2 shadow-sm">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">{item.name}</h3>
-                    <p className="text-sm text-gray-600">{item.type}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-blue-600">{item.price}</p>
-                    <button
-                      onClick={() => isInCart(item.id) ? handleRemoveFromCart(item.id) : handleAddToCart(item)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium ${
-                        isInCart(item.id)
-                          ? 'bg-red-500 text-white'
-                          : 'bg-blue-500 text-white'
-                      }`}
-                    >
-                      {isInCart(item.id) ? 'Remove' : 'Add'}
-                    </button>
+            {searchResults.length > 0 ? (
+              searchResults.map((item) => (
+                <div key={item.id} className="bg-white rounded-lg p-4 mb-2 shadow-sm border">
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-600">Radiology Test</p>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="font-semibold text-blue-600 text-lg">{item.price}</p>
+                      <button
+                        onClick={() => isInCart(item.id) ? handleRemoveFromCart(item.id) : handleAddToCart(item)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium mt-2 ${
+                          isInCart(item.id)
+                            ? 'bg-red-500 text-white hover:bg-red-600'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                        } transition-colors`}
+                      >
+                        {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No results found. Try searching for "MRI", "X-Ray", or "CT Scan".</p>
               </div>
-            ))}
+            )}
           </div>
         ) : (
           // Default Home Content
@@ -228,12 +312,15 @@ const Home = () => {
             <AiAnalysisWidget onUploadClick={handleUploadPrescription} />
 
             {/* Popular Packages */}
-            <div className="px-4 mb-6">
+            <div id="popular-packages" className="px-4 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
                   <span className="text-blue-600">Popular</span> Packages
                 </h2>
-                <button className="text-blue-600 text-sm font-medium">
+                <button
+                  className="text-blue-600 text-sm font-medium"
+                  onClick={() => navigate('/popular-packages')}
+                >
                   View all »
                 </button>
               </div>
@@ -253,12 +340,15 @@ const Home = () => {
             </div>
 
             {/* Lifestyle Packages */}
-            <div className="px-4 mb-6">
+            <div id="lifestyle-packages" className="px-4 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
                   <span className="text-blue-600">Lifestyle</span> Packages
                 </h2>
-                <button className="text-blue-600 text-sm font-medium">
+                <button
+                  className="text-blue-600 text-sm font-medium"
+                  onClick={() => navigate('/lifestyle-packages')}
+                >
                   View all »
                 </button>
               </div>

@@ -1,31 +1,36 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Available cities and their sub-locations
+// Available cities and their sub-locations with default pincodes
 const AVAILABLE_CITIES = {
   bangalore: {
-    name: 'Bangalore',
+    name: 'Bengaluru',
     image: '/assets/images/banglore.png',
-    subLocations: ['Bangalore North', 'Bangalore South', 'Bangalore East', 'Bangalore West', 'Electronic City']
+    subLocations: ['Bangalore North', 'Bangalore South', 'Bangalore East', 'Bangalore West', 'Electronic City'],
+    defaultPincode: '560001'
   },
   delhi: {
     name: 'Delhi',
     image: '/assets/images/delhi.png',
-    subLocations: ['Delhi', 'Gurgaon', 'Noida', 'Greater Noida', 'Gaziabad', 'Faridabad']
+    subLocations: ['Delhi', 'Gurgaon', 'Noida', 'Greater Noida', 'Gaziabad', 'Faridabad'],
+    defaultPincode: '110001'
   },
   mumbai: {
     name: 'Mumbai',
     image: '/assets/images/mumbai.png',
-    subLocations: ['Mumbai West', 'Mumbai South', 'Mumbai Central', 'Navi Mumbai', 'Thane']
+    subLocations: ['Mumbai West', 'Mumbai South', 'Mumbai Central', 'Navi Mumbai', 'Thane'],
+    defaultPincode: '400001'
   },
   hyderabad: {
     name: 'Hyderabad',
     image: '/assets/images/hydrabad.png',
-    subLocations: ['Hyderabad Central', 'Secunderabad', 'Gachibowli', 'Kukatpally', 'Hitech City']
+    subLocations: ['Hyderabad Central', 'Secunderabad', 'Gachibowli', 'Kukatpally', 'Hitech City'],
+    defaultPincode: '500001'
   },
   odisha: {
     name: 'Odisha',
     image: '/assets/images/odisha.png',
-    subLocations: ['Bhubaneswar', 'Cuttack', 'Puri', 'Rourkela', 'Berhampur']
+    subLocations: ['Bhubaneswar', 'Cuttack', 'Puri', 'Rourkela', 'Berhampur'],
+    defaultPincode: '751001'
   }
 };
 
@@ -119,7 +124,8 @@ const locationSlice = createSlice({
           city: cityKey,
           subLocation: subLocation || cityData.subLocations[0],
           name: cityData.name,
-          displayName: subLocation ? `${subLocation}, ${cityData.name}` : cityData.name
+          displayName: subLocation ? `${subLocation}, ${cityData.name}` : cityData.name,
+          pincode: cityData.defaultPincode
         };
         state.error = null;
         // Persist to sessionStorage

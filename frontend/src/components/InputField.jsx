@@ -14,7 +14,7 @@ export default function InputField({ label, value, onChange, type = "text", show
           onChange={(e) => {
             const inputValue = e.target.value;
             // Allow only numbers for mobile number fields
-            if (label.toLowerCase().includes('mobile') || label.toLowerCase().includes('otp')) {
+            if (label && (label.toLowerCase().includes('mobile') || label.toLowerCase().includes('otp'))) {
               if (/^\d*$/.test(inputValue)) {
                 onChange(inputValue);
               }

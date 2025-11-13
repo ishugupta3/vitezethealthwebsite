@@ -18,7 +18,20 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Try to get token from stored login response first, fallback to sessionStorage
+    let token = null;
+    const loginResponse = sessionStorage.getItem('loginResponse');
+    if (loginResponse) {
+      try {
+        const parsedResponse = JSON.parse(loginResponse);
+        token = parsedResponse.token;
+      } catch (error) {
+        console.error('Error parsing login response:', error);
+      }
+    }
+    if (!token) {
+      token = sessionStorage.getItem('token');
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,8 +52,8 @@ api.interceptors.response.use(
       // Token expired or invalid
       // Don't redirect to login if on booking page to prevent page closure
       if (window.location.pathname !== '/booking') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user_mobile');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user_mobile');
         window.location.href = '/login';
       }
     }
@@ -349,6 +362,24 @@ class ApiService {
   async searchByCity(cityName) {
     try {
       const response = await api.get(`${BackendEndpoints.SEARCH_BY_CITY}?city=${cityName}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async searchTests(query, cityName) {
+    try {
+      const response = await api.get(`http://15.207.229.70/api/search?q=${query}&cityName=${cityName}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getPopularPackages(cityName, pincode) {
+    try {
+      const response = await axios.get(`http://15.207.229.70/api/tests/popular-package?pincode={pincode}&cityName=${cityName}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);

@@ -1,8 +1,6 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../store/slices/authSlice';
-import logo from '../assets/logo/logo.svg';
 import {
   FaLinkedin,
   FaTwitter,
@@ -14,13 +12,11 @@ import {
   FaPhoneAlt,
   FaEnvelope,
   FaUser,
-  FaSignOutAlt,
   FaHandshake,
   FaShareAlt
 } from 'react-icons/fa';
 
 const Footer = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
@@ -81,13 +77,8 @@ http://localhost:5174`;
           {/* Authentication (Right on Desktop, below on Mobile) */}
           <div className="flex justify-center order-2">
             {isAuthenticated && (
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2 text-green-200">
-                  <FaUser /> <span>Welcome, {user?.user_name || user?.name || 'User'}</span>
-                </div>
-                <button onClick={() => { dispatch(logoutUser()); navigate('/'); }} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
-                  <FaSignOutAlt /> Logout
-                </button>
+              <div className="flex items-center gap-2 text-green-200">
+                <FaUser /> <span>Welcome, {user?.user_name || user?.name || 'User'}</span>
               </div>
             )}
           </div>

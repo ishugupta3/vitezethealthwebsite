@@ -10,6 +10,11 @@ import Home from "./pages/home";
 import PartnerWithUs from "./pages/PartnerWithUs";
 import ContactUs from "./pages/ContactUs";
 import AboutUs from "./pages/AboutUs";
+import AddAddress from "./pages/AddAddress";
+import AddressList from "./pages/AddressList";
+import Pathology from "./pages/Pathology";
+import PopularPackages from "./pages/PopularPackages";
+import LifestylePackages from "./pages/LifestylePackages";
 import Toast from "./components/Toast";
 import Footer from "./components/Footer";
 
@@ -29,6 +34,11 @@ function AppContent() {
         <Route path="/partner" element={<PartnerWithUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/add-address" element={<AddAddress />} />
+        <Route path="/address-list" element={<AddressList />} />
+        <Route path="/pathology" element={<Pathology />} />
+        <Route path="/popular-packages" element={<PopularPackages />} />
+        <Route path="/lifestyle-packages" element={<LifestylePackages />} />
       </Routes>
       {location.pathname !== "/" && <Footer />}
     </>

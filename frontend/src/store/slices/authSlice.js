@@ -179,6 +179,8 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           state.user = userDetail;
           state.token = token;
+          // Store the full login response in sessionStorage
+          sessionStorage.setItem('loginResponse', JSON.stringify(payload));
           sessionStorage.setItem('token', token);
           if (userDetail.user_mobile || userDetail.mobile_number) {
             sessionStorage.setItem('user_mobile', userDetail.user_mobile || userDetail.mobile_number);
