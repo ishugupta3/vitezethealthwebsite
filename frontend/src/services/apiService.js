@@ -132,6 +132,15 @@ class ApiService {
   async searchByCity(cityName) { return api.get(`${BackendEndpoints.SEARCH_BY_CITY}?city=${cityName}`).then(r => r.data); }
   async searchTests(query, cityName) { return api.get(`/search?q=${query}&cityName=${cityName}`).then(r => r.data); }
 
+  // --------------- Popular Tests ----------------
+  async getAllTests(cityName) {
+  return axios.get(`${BackendEndpoints.API_BASE_URL}/tests/all-tests`, {
+    params: { city: cityName },
+    headers: { 'Cache-Control': 'no-cache' },
+  }).then(r => r.data);
+}
+
+
   // ---------------- POPULAR PACKAGES ----------------
   async getPopularPackages(cityName, pincode) {
     return api.get(`/tests/popular-package?pincode=${pincode}&cityName=${cityName}`).then(r => r.data);
@@ -156,4 +165,3 @@ class ApiService {
 
 export const apiService = new ApiService();
 export { BackendEndpoints };
-export default BackendEndpoints;
