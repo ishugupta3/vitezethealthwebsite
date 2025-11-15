@@ -90,8 +90,9 @@ const Home = () => {
       setIsLoading(true);
 
       // Fetch popular packages from new API
-      const cityName = 'delhi';
-      const popularPackagesRes = await apiService.getPopularPackages(cityName);
+      const cityName = (selectedLocation?.name || 'delhi').toLowerCase();
+      const pincode = selectedLocation?.pincode || '110001';
+      const popularPackagesRes = await apiService.getPopularPackages(cityName, pincode);
 
       if (popularPackagesRes.success && popularPackagesRes.data) {
         // Transform API data to match PackageCard format
@@ -282,11 +283,10 @@ const Home = () => {
                       <p className="font-semibold text-blue-600 text-lg">{item.price}</p>
                       <button
                         onClick={() => isInCart(item.id) ? handleRemoveFromCart(item.id) : handleAddToCart(item)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium mt-2 ${
-                          isInCart(item.id)
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                        } transition-colors`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium mt-2 ${isInCart(item.id)
+                          ? 'bg-red-500 text-white hover:bg-red-600'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                          } transition-colors`}
                       >
                         {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
                       </button>

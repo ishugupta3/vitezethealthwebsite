@@ -36,9 +36,11 @@ const PopularPackages = () => {
       const popularPackagesRes = await apiService.getPopularPackages(cityName, pincode);
 
       if (popularPackagesRes.success && popularPackagesRes.data) {
-        // Transform API data to match PackageCard format and filter for Popular type
+        // Transform API data to match PackageCard format
+        // If city is delhi, show all packages; otherwise filter for Popular type
+        const shouldFilterPopular = cityName !== 'delhi';
         const transformedPackages = popularPackagesRes.data
-          .filter(pkg => pkg.type === 'Popular')
+          .filter(pkg => !shouldFilterPopular || pkg.type === 'Popular')
           .map(pkg => ({
             id: pkg.id,
             name: pkg.name,

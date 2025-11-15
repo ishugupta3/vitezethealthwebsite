@@ -3,6 +3,8 @@
 
 const BackendEndpoints = {
   // Base URLs
+  AUTH_BASE_URL:"/api/auth",
+  API_BASE_URL:"/api",
   BASE_URL: "https://apihealth.zethealth.com/api/v1/Authenticate/",
   IMG_URL: "https://apihealth.zethealth.com/images/",
   PDF_UPLOAD_URL: "https://staging.zethealth.com/categorize_v2",

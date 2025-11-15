@@ -1,520 +1,159 @@
 import axios from 'axios';
 import { BackendEndpoints } from '../utils/backendEndpoints';
 
-// API Configuration
-const BASE_URL = BackendEndpoints.BASE_URL;
-const IMG_URL = BackendEndpoints.IMG_URL;
 
-// Create axios instance
-const api = axios.create({
-  baseURL: BASE_URL,
+// Auth API instance (login/register/OTP)
+const authApi = axios.create({
+  baseURL: BackendEndpoints.AUTH_BASE_URL, // proxied via /api/auth
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    // Try to get token from stored login response first, fallback to sessionStorage
-    let token = null;
-    const loginResponse = sessionStorage.getItem('loginResponse');
-    if (loginResponse) {
-      try {
-        const parsedResponse = JSON.parse(loginResponse);
-        token = parsedResponse.token;
-      } catch (error) {
-        console.error('Error parsing login response:', error);
-      }
-    }
-    if (!token) {
-      token = sessionStorage.getItem('token');
-    }
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// General API instance (packages, labs, cart, booking)
+const api = axios.create({
+  baseURL: BackendEndpoints.API_BASE_URL, // proxied via /api
+  timeout: 30000,
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+});
 
-// Response interceptor to handle common errors
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      // Don't redirect to login if on booking page to prevent page closure
-      if (window.location.pathname !== '/booking') {
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user_mobile');
-        window.location.href = '/login';
-      }
+const attachToken = (config) => {
+  let token = null;
+  const loginResponse = sessionStorage.getItem('loginResponse');
+  if (loginResponse) {
+    try {
+      const parsed = JSON.parse(loginResponse);
+      token = parsed.token;
+    } catch (err) {
+      console.error('Error parsing login response:', err);
     }
-    return Promise.reject(error);
   }
-);
+  if (!token) {
+    token = sessionStorage.getItem('token');
+  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+};
 
-// API Service class
+[authApi, api].forEach((instance) => {
+  instance.interceptors.request.use(attachToken, (error) => Promise.reject(error));
+});
+
+[authApi, api].forEach((instance) => {
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Token expired/invalid
+        if (window.location.pathname !== '/booking') {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user_mobile');
+          window.location.href = '/login';
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+});
+
+
 class ApiService {
-  // Authentication APIs
-  async sendOtp(data) {
-    try {
-      const response = await api.post(BackendEndpoints.SEND_OTP, data);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  async sendOtp(data) { return authApi.post(BackendEndpoints.SEND_OTP, data).then(r => r.data); }
+  async verifyOtp(data) { return authApi.post(BackendEndpoints.VERIFY_OTP, data).then(r => r.data); }
+  async register(data) { return authApi.post(BackendEndpoints.REGISTER, data).then(r => r.data); }
+  async logout() { return authApi.post(BackendEndpoints.LOGOUT).then(r => r.data); }
 
-  async sendOtpForRegistration(data) {
-    try {
-      const response = await api.post(BackendEndpoints.REGISTER, data);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- HOME APIs ----------------
+  async getHomeData(data) { return api.post(BackendEndpoints.GET_HOME, data).then(r => r.data); }
+  async getNotifications() { return api.get(BackendEndpoints.GET_NOTIFICATION).then(r => r.data); }
 
-  async verifyOtp(data) {
-    try {
-      const response = await api.post(BackendEndpoints.VERIFY_OTP, data);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- PACKAGES & LABS ----------------
+  async getPackages() { return api.get(BackendEndpoints.GET_PACKAGE_LIST).then(r => r.data); }
+  async getLabTests() { return api.get(BackendEndpoints.GET_LAB_TEST_LIST).then(r => r.data); }
+  async getTestProfile(testId) { return api.get(`${BackendEndpoints.GET_TEST_PROFILE}?test_id=${testId}`).then(r => r.data); }
+  async getLabList() { return api.post(BackendEndpoints.GET_LAB_LIST, {}).then(r => r.data); }
+  async getLabListV2(params) { return api.get(BackendEndpoints.GET_LAB_LIST_V2, { params }).then(r => r.data); }
+  async getLabWiseTests(labId) { return api.get(`${BackendEndpoints.LAB_WISE_TEST}?lab_id=${labId}`).then(r => r.data); }
 
-  async register(data) {
-    try {
-      const response = await api.post(BackendEndpoints.REGISTER, data);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- PATIENT APIs ----------------
+  async addPatient(patientData) { return api.post(BackendEndpoints.ADD_PATIENT, patientData).then(r => r.data); }
+  async getPatientList() { return api.get(BackendEndpoints.GET_PATIENT_LIST).then(r => r.data); }
 
-  async logout() {
-    try {
-      const response = await api.post(BackendEndpoints.LOGOUT);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- CART APIs ----------------
+  async addToCart(cartData) { return api.post(BackendEndpoints.ADD_TO_CART, cartData).then(r => r.data); }
+  async getCart() { return api.get(BackendEndpoints.GET_CART).then(r => r.data); }
+  async clearCart() { return api.get(BackendEndpoints.CLEAR_CART).then(r => r.data); }
 
-  // Home APIs
-  async getHomeData(data) {
-    try {
-      const response = await api.post(BackendEndpoints.GET_HOME, data);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- BOOKING APIs ----------------
+  async getSlots(bookingData) { return api.post(BackendEndpoints.GET_SLOT, bookingData).then(r => r.data); }
+  async bookNow(bookingData) { return api.post(BackendEndpoints.BOOK_NOW, bookingData).then(r => r.data); }
+  async getBookingList() { return api.get(BackendEndpoints.GET_BOOKING_LIST).then(r => r.data); }
+  async getBookingDetails(bookingId) { return api.get(`${BackendEndpoints.GET_BOOKING_DETAILS}?booking_id=${bookingId}`).then(r => r.data); }
+  async bookingAfterPayment(paymentData) { return api.post(BackendEndpoints.BOOKING_AFTER_PAYMENT, paymentData).then(r => r.data); }
 
-  // Package and Test APIs
-  async getPackages() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_PACKAGE_LIST);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getLabTests() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_LAB_TEST_LIST);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getTestProfile(testId) {
-    try {
-      const response = await api.get(`${BackendEndpoints.GET_TEST_PROFILE}?test_id=${testId}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Patient APIs
-  async addPatient(patientData) {
-    try {
-      const response = await api.post(BackendEndpoints.ADD_PATIENT, patientData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getPatientList() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_PATIENT_LIST);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Lab APIs
-  async getLabList() {
-    try {
-      const response = await api.post(BackendEndpoints.GET_LAB_LIST, {});
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getLabListV2(params) {
-    try {
-      const response = await api.get(BackendEndpoints.GET_LAB_LIST_V2, { params });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Cart APIs
-  async addToCart(cartData) {
-    try {
-      const response = await api.post(BackendEndpoints.ADD_TO_CART, cartData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getCart() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_CART);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async clearCart() {
-    try {
-      const response = await api.get(BackendEndpoints.CLEAR_CART);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Booking APIs
-  async getSlots(bookingData) {
-    try {
-      const response = await api.post(BackendEndpoints.GET_SLOT, bookingData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async bookNow(bookingData) {
-    try {
-      const response = await api.post(BackendEndpoints.BOOK_NOW, bookingData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getBookingList() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_BOOKING_LIST);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getBookingDetails(bookingId) {
-    try {
-      const response = await api.get(`${BackendEndpoints.GET_BOOKING_DETAILS}?booking_id=${bookingId}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Prescription APIs
+  // ---------------- PRESCRIPTION APIs ----------------
   async uploadPrescription(formData) {
-    try {
-      const response = await api.post(BackendEndpoints.UPLOAD_PRESCRIPTION, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    return api.post(BackendEndpoints.UPLOAD_PRESCRIPTION, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data);
   }
+  async getPrescriptions() { return api.get(BackendEndpoints.GET_PRESCRIPTION).then(r => r.data); }
 
-  async getPrescriptions() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_PRESCRIPTION);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- REPORT APIs ----------------
+  async getReports() { return api.get(BackendEndpoints.GET_REPORT).then(r => r.data); }
 
-  // Report APIs
-  async getReports() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_REPORT);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- ADDRESS APIs ----------------
+  async getAddressList() { return api.get(BackendEndpoints.GET_ADDRESS_LIST).then(r => r.data); }
+  async addAddress(addressData) { return api.post(BackendEndpoints.ADD_ADDRESS, addressData).then(r => r.data); }
+  async deleteAddress(addressId) { return api.post(BackendEndpoints.ADDRESS_DELETE, { address_id: addressId }).then(r => r.data); }
 
-  // Notification APIs
-  async getNotifications() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_NOTIFICATION);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Address APIs
-  async getAddressList() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_ADDRESS_LIST);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async addAddress(addressData) {
-    try {
-      const response = await api.post(BackendEndpoints.ADD_ADDRESS, addressData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async deleteAddress(addressId) {
-    try {
-      const response = await api.post(BackendEndpoints.ADDRESS_DELETE, { address_id: addressId });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // CMS APIs
+  // ---------------- CMS ----------------
   async getCmsContent(slug) {
-    try {
-      // Use direct axios call without authentication for CMS content
-      const response = await axios.post(`${BASE_URL}${BackendEndpoints.CMS}`, { slug }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        timeout: 30000,
-      });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    return axios.post(`${BackendEndpoints.BASE_URL}${BackendEndpoints.CMS}`, { slug }, {
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      timeout: 30000,
+    }).then(r => r.data);
   }
 
-  // Contact Us API
-  async contactUs(contactData) {
-    try {
-      const response = await api.post(BackendEndpoints.CONTACT_US, contactData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- CONTACT ----------------
+  async contactUs(contactData) { return api.post(BackendEndpoints.CONTACT_US, contactData).then(r => r.data); }
 
-  // Rating and Review APIs
-  async submitRating(ratingData) {
-    try {
-      const response = await api.post(BackendEndpoints.RATING_REVIEW, ratingData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- COUPONS & PAYMENTS ----------------
+  async applyCoupon(couponData) { return api.post(BackendEndpoints.APPLY_COUPON, couponData).then(r => r.data); }
+  async getOrderKey() { return api.get(BackendEndpoints.GET_ORDER_KEY).then(r => r.data); }
+  async getWalletTransaction() { return api.get(BackendEndpoints.GET_WALLET_TRANSACTION).then(r => r.data); }
+  async rechargeWallet(amount) { return api.post(BackendEndpoints.RECHARGE_WALLET, { amount }).then(r => r.data); }
+  async checkBalanceWithPayment(paymentData) { return api.post(BackendEndpoints.CHECK_BALANCE_WITH_PAYMENT, paymentData).then(r => r.data); }
 
-  // Search APIs
-  async searchByCity(cityName) {
-    try {
-      const response = await api.get(`${BackendEndpoints.SEARCH_BY_CITY}?city=${cityName}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- DELETE & UPDATE ----------------
+  async deleteAccount() { return api.post(BackendEndpoints.DELETE_ACCOUNT).then(r => r.data); }
+  async updateProfile(profileData) { return api.post(BackendEndpoints.UPDATE_PROFILE, profileData).then(r => r.data); }
 
-  async searchTests(query, cityName) {
-    try {
-      const response = await api.get(`http://15.207.229.70/api/search?q=${query}&cityName=${cityName}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // ---------------- SEARCH ----------------
+  async searchByCity(cityName) { return api.get(`${BackendEndpoints.SEARCH_BY_CITY}?city=${cityName}`).then(r => r.data); }
+  async searchTests(query, cityName) { return api.get(`/search?q=${query}&cityName=${cityName}`).then(r => r.data); }
 
+  // ---------------- POPULAR PACKAGES ----------------
   async getPopularPackages(cityName, pincode) {
-    try {
-      const response = await axios.get(`http://15.207.229.70/api/tests/popular-package?pincode={pincode}&cityName=${cityName}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    return api.get(`/tests/popular-package?pincode=${pincode}&cityName=${cityName}`).then(r => r.data);
   }
 
-  // Coupon APIs
-  async applyCoupon(couponData) {
-    try {
-      const response = await api.post(BackendEndpoints.APPLY_COUPON, couponData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Payment APIs
-  async getOrderKey() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_ORDER_KEY);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getWalletTransaction() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_WALLET_TRANSACTION);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async rechargeWallet(amount) {
-    try {
-      const response = await api.post(BackendEndpoints.RECHARGE_WALLET, { amount });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async checkBalanceWithPayment(paymentData) {
-    try {
-      const response = await api.post(BackendEndpoints.CHECK_BALANCE_WITH_PAYMENT, paymentData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async bookingAfterPayment(paymentData) {
-    try {
-      const response = await api.post(BackendEndpoints.BOOKING_AFTER_PAYMENT, paymentData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Delete Account API
-  async deleteAccount() {
-    try {
-      const response = await api.post(BackendEndpoints.DELETE_ACCOUNT);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Update Profile API
-  async updateProfile(profileData) {
-    try {
-      const response = await api.post(BackendEndpoints.UPDATE_PROFILE, profileData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Lab-wise test API
-  async getLabWiseTests(labId) {
-    try {
-      const response = await api.get(`${BackendEndpoints.LAB_WISE_TEST}?lab_id=${labId}`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Get coupon API
-  async getCoupons() {
-    try {
-      const response = await api.get(BackendEndpoints.GET_COUPON);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Error handler
+  // ---------------- ERROR HANDLER ----------------
   handleError(error) {
     if (error.response) {
-      // Server responded with error status
-      // Log full response for easier debugging
-      // eslint-disable-next-line no-console
-      console.error('API error response:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        headers: error.response.headers,
-        url: error.config?.url,
-        method: error.config?.method,
-      });
-
-      const respData = error.response.data || {};
-      const possibleMessage = respData.message || respData.error || respData.detail || JSON.stringify(respData);
-      const message = possibleMessage && possibleMessage !== '{}' ? possibleMessage : `HTTP ${error.response.status}: ${error.response.statusText}`;
-      return new Error(message);
+      const resp = error.response.data || {};
+      const msg = resp.message || resp.error || resp.detail || `HTTP ${error.response.status}`;
+      console.error('API ERROR', { status: error.response.status, url: error.config.url, method: error.config.method, data: resp });
+      return new Error(msg);
     } else if (error.request) {
-      // Network error
-      // eslint-disable-next-line no-console
-      console.error('API network error - no response received', error.request);
-      return new Error('Network error - please check your internet connection');
+      console.error('Network error', error.request);
+      return new Error('Network error - check your internet connection');
     } else {
-      // Other error
-      // eslint-disable-next-line no-console
-      console.error('API error', error.message);
+      console.error('Unknown error', error.message);
       return new Error(error.message || 'An unexpected error occurred');
     }
   }
 }
 
-// Export singleton instance
 export const apiService = new ApiService();
-export { IMG_URL, BackendEndpoints };
+export { BackendEndpoints };
+export default BackendEndpoints;
