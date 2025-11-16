@@ -3,19 +3,18 @@ import { FaSearch, FaTimes, FaUpload } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { apiService } from '../services/apiService';
 
-const SearchBar = ({
-  onSearch
-}) => {
+const SearchBar = ({ onSearch }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
   const searchInputRef = useRef(null);
   const suggestionsRef = useRef(null);
 
   const { selectedLocation } = useSelector((state) => state.location);
 
-  // Animation states
+  // Typing Animation
   const words = ['Radiology', 'Pathology', 'Tests'];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentText, setCurrentText] = useState('');
@@ -29,16 +28,16 @@ const SearchBar = ({
     if (isTyping && currentText !== word) {
       timeout = setTimeout(() => {
         setCurrentText(word.slice(0, currentText.length + 1));
-      }, 150); // Typing speed
+      }, 150);
     } else if (isTyping && currentText === word) {
       timeout = setTimeout(() => {
         setIsTyping(false);
         setIsErasing(true);
-      }, 1000); // Pause before erasing
+      }, 1000);
     } else if (isErasing && currentText !== '') {
       timeout = setTimeout(() => {
         setCurrentText(currentText.slice(0, -1));
-      }, 100); // Erasing speed
+      }, 100);
     } else if (isErasing && currentText === '') {
       setIsErasing(false);
       setCurrentWordIndex((prev) => (prev + 1) % words.length);
@@ -46,37 +45,32 @@ const SearchBar = ({
     }
 
     return () => clearTimeout(timeout);
-  }, [currentText, isTyping, isErasing, currentWordIndex, words]);
+  }, [currentText, isTyping, isErasing, currentWordIndex]);
 
-  // Fetch suggestions when query changes
+  // -------------------- Fetch Suggestions --------------------
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (query.length >= 3 && selectedLocation) {
         setIsLoadingSuggestions(true);
+
         try {
-          const cityName = selectedLocation.name || 'bengaluru';
-          console.log('Fetching suggestions for:', query, 'in city:', cityName);
+          const cityName = selectedLocation.name || 'delhi';
           const response = await apiService.searchTests(query, cityName);
-          console.log('API Response:', response);
 
-          if (response && response.radiology_tests && response.radiology_tests.length > 0) {
-            // Extract unique test names for suggestions
-            const uniqueSuggestions = [...new Set(
-              response.radiology_tests.map(test => test.name)
-            )].slice(0, 10); // Limit to 10 suggestions
+          if (response?.radiology_tests?.length > 0) {
+            const uniqueSuggestions = [
+              ...new Set(response.radiology_tests.map((test) => test.name)),
+            ].slice(0, 10);
 
-            console.log('Suggestions found:', uniqueSuggestions);
             setSuggestions(uniqueSuggestions);
             setShowSuggestions(true);
           } else {
-            console.log('No radiology_tests found in response');
             setSuggestions([]);
             setShowSuggestions(false);
           }
         } catch (error) {
-          console.error('Error fetching suggestions:', error);
+          console.error("Search API Error:", error);
           setSuggestions([]);
-          setShowSuggestions(false);
         } finally {
           setIsLoadingSuggestions(false);
         }
@@ -86,11 +80,11 @@ const SearchBar = ({
       }
     };
 
-    const debounceTimer = setTimeout(fetchSuggestions, 300); // Debounce API calls
+    const debounceTimer = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(debounceTimer);
   }, [query, selectedLocation]);
 
-  // Close suggestions when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -107,57 +101,47 @@ const SearchBar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Events
   const handleSearch = (value) => {
     setQuery(value);
-    if (onSearch) {
-      onSearch(value);
-    }
+    onSearch?.(value);
   };
 
   const handleSuggestionClick = (suggestion) => {
     setQuery(suggestion);
     setShowSuggestions(false);
-    if (onSearch) {
-      onSearch(suggestion);
-    }
+    onSearch?.(suggestion);
   };
 
   const clearSearch = () => {
     setQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
+    searchInputRef.current?.focus();
   };
 
   const handleUploadPrescription = () => {
-    // Handle prescription upload logic
-    console.log('Upload prescription clicked');
+    console.log("Upload prescription clicked");
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm px-4 py-3 w-full max-w-2xl relative">
+    <div>
       {/* Search Bar */}
-      <div className="relative flex items-center bg-gray-50 hover:bg-gray-100 rounded-full px-5 py-3 border border-gray-200 transition">
+      <div className="relative flex items-center hover:bg-gray-100 rounded-full px-7 py-4 border border-gray-200 w-full max-w-2xl transition min-height-[60px]">
+
         <FaSearch className="text-green-500 mr-3" />
 
         <input
           ref={searchInputRef}
           type="text"
-          placeholder=""
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => {
-            if (suggestions.length > 0) {
-              setShowSuggestions(true);
-            }
-          }}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          className="flex-1 bg-transparent outline-none text-sm text-gray-700"
         />
 
         {!query && (
-          <div className="absolute left-12 top-1/2 transform -translate-y-1/2 pointer-events-none text-sm text-gray-400">
+          <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-gray-400">
             Search for <span className="text-green-500 font-bold">{currentText}</span>
           </div>
         )}
@@ -171,7 +155,6 @@ const SearchBar = ({
         <button
           onClick={handleUploadPrescription}
           className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full ml-2 transition"
-          aria-label="Upload prescription"
         >
           <FaUpload className="text-base" />
         </button>
@@ -192,7 +175,7 @@ const SearchBar = ({
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-sm text-gray-700"
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 text-sm text-gray-700"
               >
                 {suggestion}
               </button>
@@ -205,3 +188,4 @@ const SearchBar = ({
 };
 
 export default SearchBar;
+    

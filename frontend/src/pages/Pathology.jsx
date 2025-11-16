@@ -151,13 +151,6 @@ const Pathology = () => {
         onCartTap={handleViewCart}
       />
 
-      <div className="px-4 py-4">
-        <SearchBar
-          onSearch={handleSearch}
-          placeholder="Search tests..."
-        />
-      </div>
-
       <div className="pb-24 pt-4">
         {isSearching ? (
           <SearchResults

@@ -130,7 +130,19 @@ class ApiService {
 
   // ---------------- SEARCH ----------------
   async searchByCity(cityName) { return api.get(`${BackendEndpoints.SEARCH_BY_CITY}?city=${cityName}`).then(r => r.data); }
-  async searchTests(query, cityName) { return api.get(`/search?q=${query}&cityName=${cityName}`).then(r => r.data); }
+
+  // --------------- Search by tests --------------
+  async searchTests(query, cityName) {
+  try {
+    const response = await api.get(
+      `/search?q=${encodeURIComponent(query)}&cityName=${encodeURIComponent(cityName)}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in searchTests:", error);
+    throw error;
+  }
+}
 
   // --------------- Popular Tests ----------------
   async getAllTests(cityName) {

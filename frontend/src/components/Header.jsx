@@ -69,10 +69,9 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap }) => {
               </div>
 
               {/* SearchBar - hidden on mobile, visible on md+ */}
-              <div className="hidden md:flex flex-1 max-w-1g">
-                <SearchBar />
-              </div>
-
+             <div className="hidden md:flex flex-1 max-w-2xl">
+  <SearchBar />
+</div>
               {/* Location Button - mobile only */}
               {onLocationTap && displayAddress && (
                 <button
