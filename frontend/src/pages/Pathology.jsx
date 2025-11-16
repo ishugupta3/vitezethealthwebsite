@@ -7,7 +7,7 @@ import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { apiService } from '../services/apiService';
 
-const pageSize = 6; // items per page
+const pageSize = 10; // items per page
 
 const Pathology = () => {
   const navigate = useNavigate();
@@ -24,8 +24,9 @@ const Pathology = () => {
   const [currentPage, setCurrentPage] = useState({
     lab_tests: 1,
     packages: 1,
-    profile_tests: 1,
   });
+
+  const [selectedCategories, setSelectedCategories] = useState('lab_tests');
 
   useEffect(() => {
     if (!selectedLocation) {
@@ -92,7 +93,7 @@ const Pathology = () => {
     }
 
     // Reset pagination on new search
-    setCurrentPage({ lab_tests: 1, packages: 1, profile_tests: 1 });
+    setCurrentPage({ lab_tests: 1, packages: 1 });
   };
 
   const handleAddToCart = (item) => {
@@ -151,6 +152,13 @@ const Pathology = () => {
         onCartTap={handleViewCart}
       />
 
+      <div className="px-4 py-4">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Search tests..."
+        />
+      </div>
+
       <div className="pb-24 pt-4">
         {isSearching ? (
           <SearchResults
@@ -175,6 +183,8 @@ const Pathology = () => {
             onRemoveFromCart={handleRemoveFromCart}
             currentPage={currentPage}
             onPageChange={handlePageChange}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
           />
         )}
       </div>
@@ -185,35 +195,60 @@ const Pathology = () => {
 };
 
 // -------------------- Helper Components --------------------
-const SearchResults = ({ lab_tests, packages, profile_tests, radiology_tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => (
-  <div className="px-4 py-4">
-    <h2 className="text-lg font-semibold mb-4">Search Results</h2>
-    {lab_tests.length === 0 && packages.length === 0 && profile_tests.length === 0 && radiology_tests.length === 0 ? (
-      <p className="text-gray-600">No tests found</p>
-    ) : (
-      <>
-        {lab_tests.length > 0 && <Section title="Lab Tests" items={lab_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.lab_tests} onPageChange={onPageChange} />}
-        {packages.length > 0 && <Section title="Packages" items={packages} Component={PackageCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.packages} onPageChange={onPageChange} />}
-        {profile_tests.length > 0 && <Section title="Profile Tests" items={profile_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.profile_tests} onPageChange={onPageChange} />}
-        {radiology_tests.length > 0 && <Section title="Radiology Tests" items={radiology_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={1} onPageChange={() => {}} />}
-      </>
-    )}
-  </div>
-);
+const SearchResults = ({ lab_tests, packages, profile_tests, radiology_tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => {
+  // Merge profile_tests into lab_tests for display
+  const combinedLabTests = [...lab_tests, ...profile_tests];
 
-const PopularTests = ({ lab_tests, packages, profile_tests, radiology_tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => (
-  <div className="px-4 mb-6">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-bold">
-        <span className="text-blue-600">Popular</span> Tests
-      </h2>
+  return (
+    <div className="px-4 py-4">
+      <h2 className="text-lg font-semibold mb-4">Search Results</h2>
+      {combinedLabTests.length === 0 && packages.length === 0 && radiology_tests.length === 0 ? (
+        <p className="text-gray-600">No tests found</p>
+      ) : (
+        <>
+          {combinedLabTests.length > 0 && <Section title="Lab Tests" items={combinedLabTests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.lab_tests} onPageChange={onPageChange} />}
+          {packages.length > 0 && <Section title="Packages" items={packages} Component={PackageCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.packages} onPageChange={onPageChange} />}
+          {radiology_tests.length > 0 && <Section title="Radiology Tests" items={radiology_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={1} onPageChange={() => {}} />}
+        </>
+      )}
     </div>
-    {lab_tests.length > 0 && <Section title="Lab Tests" items={lab_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.lab_tests} onPageChange={onPageChange} />}
-    {packages.length > 0 && <Section title="Packages" items={packages} Component={PackageCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.packages} onPageChange={onPageChange} />}
-    {profile_tests.length > 0 && <Section title="Profile Tests" items={profile_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.profile_tests} onPageChange={onPageChange} />}
-    {radiology_tests.length > 0 && <Section title="Radiology Tests" items={radiology_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={1} onPageChange={() => {}} />}
-  </div>
-);
+  );
+};
+
+const PopularTests = ({ lab_tests, packages, profile_tests, radiology_tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange, selectedCategories, setSelectedCategories }) => {
+  const toggleCategory = (category) => {
+    setSelectedCategories(category);
+  };
+
+  // Merge profile_tests into lab_tests for display
+  const combinedLabTests = [...lab_tests, ...profile_tests];
+
+  return (
+    <div className="px-4 mb-6">
+      <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+        <p className="text-lg font-semibold mb-2">You can select multiple tests</p>
+        <p className="text-gray-600">We assist you in lab test booking</p>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-4">
+        <button
+          onClick={() => toggleCategory('lab_tests')}
+          className={`px-4 py-2 rounded-full text-sm font-medium ${selectedCategories === 'lab_tests' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+          Lab Tests
+        </button>
+        <button
+          onClick={() => toggleCategory('packages')}
+          className={`px-4 py-2 rounded-full text-sm font-medium ${selectedCategories === 'packages' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+          Packages
+        </button>
+      </div>
+      {selectedCategories === 'lab_tests' && combinedLabTests.length > 0 && <Section title="" items={combinedLabTests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.lab_tests} onPageChange={onPageChange} />}
+      {selectedCategories === 'packages' && packages.length > 0 && <Section title="" items={packages} Component={PackageCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={currentPage.packages} onPageChange={onPageChange} />}
+      {radiology_tests.length > 0 && <Section title="Radiology Tests" items={radiology_tests} Component={TestCard} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} page={1} onPageChange={() => {}} />}
+    </div>
+  );
+};
 
 const Section = ({ title, items, Component, isInCart, onAddToCart, onRemoveFromCart, page, onPageChange }) => {
   const startIndex = (page - 1) * pageSize;
@@ -234,7 +269,7 @@ const Section = ({ title, items, Component, isInCart, onAddToCart, onRemoveFromC
           <button
             disabled={page === 1}
             onClick={() => onPageChange(title, page - 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
           >
             Prev
           </button>
@@ -242,7 +277,7 @@ const Section = ({ title, items, Component, isInCart, onAddToCart, onRemoveFromC
           <button
             disabled={page === totalPages}
             onClick={() => onPageChange(title, page + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
           >
             Next
           </button>
@@ -257,22 +292,20 @@ const TestCard = ({ test, isInCart, onAddToCart, onRemoveFromCart }) => {
   const lab = test.labs?.[0] || {};
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-center">
         <div className="flex-1">
-          <h3 className="font-medium text-sm mb-1">{test.name}</h3>
-          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
-          <p className="text-xs text-gray-600">{lab.type || 'N/A'}</p>
+          <h3 className="font-medium text-sm">{test.name}</h3>
         </div>
-        <div className="text-right">
-          <p className="font-semibold text-blue-600">₹{lab.price || 'N/A'}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-green-600">₹{lab.price || 'N/A'}</p>
+          <button
+            onClick={() => isInCart(test.id) ? onRemoveFromCart(test.id) : onAddToCart(test)}
+            className={`px-4 py-1 rounded-full text-xs font-medium ${isInCart(test.id) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}
+          >
+            {isInCart(test.id) ? 'Remove' : 'Add'}
+          </button>
         </div>
       </div>
-      <button
-        onClick={() => isInCart(test.id) ? onRemoveFromCart(test.id) : onAddToCart(test)}
-        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(test.id) ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
-      >
-        {isInCart(test.id) ? 'Remove' : 'Add to Cart'}
-      </button>
     </div>
   );
 };
@@ -281,23 +314,20 @@ const PackageCard = ({ package: pkg, isInCart, onAddToCart, onRemoveFromCart }) 
   const lab = pkg.labs?.[0] || {};
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-center">
         <div className="flex-1">
-          <h3 className="font-medium text-sm mb-1">{pkg.name}</h3>
-          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
-          <p className="text-xs text-gray-600 mb-2">{pkg.itemDetail ? pkg.itemDetail.replace(/\n/g, ', ') : 'N/A'}</p>
-          <p className="text-xs text-gray-600">{lab.type || 'N/A'}</p>
+          <h3 className="font-medium text-sm">{pkg.name}</h3>
         </div>
-        <div className="text-right">
+        <div className="flex items-center gap-2">
           <p className="font-semibold text-blue-600">₹{lab.price || 'N/A'}</p>
+          <button
+            onClick={() => isInCart(pkg.id) ? onRemoveFromCart(pkg.id) : onAddToCart(pkg)}
+            className={`px-4 py-1 rounded-full text-xs font-medium ${isInCart(pkg.id) ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+          >
+            {isInCart(pkg.id) ? 'Remove' : 'Add'}
+          </button>
         </div>
       </div>
-      <button
-        onClick={() => isInCart(pkg.id) ? onRemoveFromCart(pkg.id) : onAddToCart(pkg)}
-        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(pkg.id) ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
-      >
-        {isInCart(pkg.id) ? 'Remove' : 'Add to Cart'}
-      </button>
     </div>
   );
 };

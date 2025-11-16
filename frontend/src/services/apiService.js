@@ -152,6 +152,19 @@ class ApiService {
   }).then(r => r.data);
 }
 
+  // ---------------- RADIOLOGY TESTS ----------------
+  async getRadiologyTests(cityName) {
+    const response = await this.getAllTests(cityName);
+    if (response && response.data) {
+      // Filter tests where lab.type is 'Radiology'
+      const radiologyTests = response.data.filter(test =>
+        test.labs?.some(lab => lab.type === 'Radiology')
+      );
+      return { data: radiologyTests };
+    }
+    return response;
+  }
+
 
   // ---------------- POPULAR PACKAGES ----------------
   async getPopularPackages(cityName, pincode) {

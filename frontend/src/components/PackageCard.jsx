@@ -31,7 +31,7 @@ const PackageCard = ({
           <img
             src={pkg.image || '/placeholder-image.jpg'}
             alt={pkg.name}
-            className="w-full h-32 object-cover rounded-2xl"
+            className="w-full h-40 object-cover rounded-2xl"
             onError={(e) => {
               e.target.src = '/placeholder-image.jpg';
             }}
@@ -46,12 +46,12 @@ const PackageCard = ({
 
           {/* Time Badge */}
           <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 mb-2 w-fit">
-            <FaClock className="text-blue-500 mr-1 text-xs" />
+            <FaClock className="text-green-500 mr-1 text-xs" />
             <span className="text-gray-600 text-xs">2-4 Hours</span>
           </div>
 
           {/* Price */}
-          <div className="bg-blue-500 text-white rounded-full px-3 py-1 w-fit mb-3">
+          <div className="bg-green-500 text-white rounded-full px-3 py-1 w-fit mb-3">
             <span className="text-sm font-semibold">At {pkg.price} ₹ only</span>
           </div>
 
@@ -61,7 +61,7 @@ const PackageCard = ({
               <div className="space-y-1">
                 {pkg.itemDetail.slice(0, 3).map((item, index) => (
                   <div key={index} className="flex items-start">
-                    <span className="text-blue-500 mr-2 mt-1">◈</span>
+                    <span className="text-green-500 mr-2 mt-1">◈</span>
                     <span className="text-gray-600 text-sm line-clamp-1">
                       {item.name}
                     </span>
@@ -85,7 +85,7 @@ const PackageCard = ({
         className={`w-full py-3 rounded-2xl font-semibold text-sm transition-all duration-200 ${
           isInCart
             ? 'bg-red-500 text-white hover:bg-red-600'
-            : 'bg-blue-500 text-white hover:bg-blue-600'
+            : 'bg-green-500 text-white hover:bg-green-600'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isLoading ? 'Processing...' : (isInCart ? 'Remove from Cart' : 'Add to Cart')}

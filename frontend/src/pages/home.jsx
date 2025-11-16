@@ -253,7 +253,10 @@ const Home = () => {
         </div>
 
         {/* Radiology Card */}
-        <div style={{ background: '#fff5cc', borderRadius: '16px', width: '250px', padding: '24px' }}>
+        <div
+          style={{ background: '#fff5cc', borderRadius: '16px', width: '250px', padding: '24px', cursor: 'pointer' }}
+          onClick={() => navigate('/radiology')}
+        >
           <h2 style={{ color: '#404040', fontSize: '1.5em', margin: '0' }}>Radiology</h2>
           <p style={{ color: '#6b6b6b', margin: '10px 0 20px 0' }}>Scans & Imaging</p>
           {/* Radiology Icon (Example SVG, insert relevant image if available) */}
@@ -325,16 +328,17 @@ const Home = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex overflow-x-auto space-x-4 pb-4">
                 {popularPackages.map((pkg) => (
-                  <PackageCard
-                    key={pkg.id}
-                    package={pkg}
-                    isInCart={isInCart(pkg.id)}
-                    onAddToCart={handleAddToCart}
-                    onRemoveFromCart={handleRemoveFromCart}
-                    onViewDetails={() => showToast('View details coming soon')}
-                  />
+                  <div key={pkg.id} className="flex-shrink-0 w-80">
+                    <PackageCard
+                      package={pkg}
+                      isInCart={isInCart(pkg.id)}
+                      onAddToCart={handleAddToCart}
+                      onRemoveFromCart={handleRemoveFromCart}
+                      onViewDetails={() => showToast('View details coming soon')}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -353,16 +357,17 @@ const Home = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex overflow-x-auto space-x-4 pb-4">
                 {lifestylePackages.map((pkg) => (
-                  <PackageCard
-                    key={pkg.id}
-                    package={pkg}
-                    isInCart={isInCart(pkg.id)}
-                    onAddToCart={handleAddToCart}
-                    onRemoveFromCart={handleRemoveFromCart}
-                    onViewDetails={() => showToast('View details coming soon')}
-                  />
+                  <div key={pkg.id} className="flex-shrink-0 w-80">
+                    <PackageCard
+                      package={pkg}
+                      isInCart={isInCart(pkg.id)}
+                      onAddToCart={handleAddToCart}
+                      onRemoveFromCart={handleRemoveFromCart}
+                      onViewDetails={() => showToast('View details coming soon')}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
