@@ -37,10 +37,9 @@ const PopularPackages = () => {
 
       if (popularPackagesRes.success && popularPackagesRes.data) {
         // Transform API data to match PackageCard format
-        // If city is delhi, show all packages; otherwise filter for Popular type
-        const shouldFilterPopular = cityName !== 'delhi';
+        // Always filter for Popular type packages only
         const transformedPackages = popularPackagesRes.data
-          .filter(pkg => !shouldFilterPopular || pkg.type === 'Popular')
+          .filter(pkg => pkg.type === 'Popular')
           .map(pkg => ({
             id: pkg.id,
             name: pkg.name,
@@ -121,7 +120,7 @@ const PopularPackages = () => {
         <div className="px-4 py-4">
           <div className="flex items-center mb-6">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="mr-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
             >
               ←

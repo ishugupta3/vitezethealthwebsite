@@ -117,7 +117,7 @@ const LifestylePackages = () => {
         <div className="px-4 py-4">
           <div className="flex items-center mb-6">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="mr-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
             >
               ←
