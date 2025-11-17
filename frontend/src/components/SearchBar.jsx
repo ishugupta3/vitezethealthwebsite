@@ -14,7 +14,7 @@ const SearchBar = ({ onSearch }) => {
 
   const { selectedLocation } = useSelector((state) => state.location);
 
-  // Typing Animation
+  // Typing Placeholder Animation
   const words = ['Radiology', 'Pathology', 'Tests'];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentText, setCurrentText] = useState('');
@@ -47,7 +47,7 @@ const SearchBar = ({ onSearch }) => {
     return () => clearTimeout(timeout);
   }, [currentText, isTyping, isErasing, currentWordIndex]);
 
-  // -------------------- Fetch Suggestions --------------------
+  // Fetch Suggestions – Debounced
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (query.length >= 3 && selectedLocation) {
@@ -57,9 +57,13 @@ const SearchBar = ({ onSearch }) => {
           const cityName = selectedLocation.name || 'delhi';
           const response = await apiService.searchTests(query, cityName);
 
-          if (response?.radiology_tests?.length > 0) {
+          if (response?.lab_tests?.length > 0 || response?.radiology_tests?.length > 0) {
+            const allTests = [
+              ...(response.lab_tests || []),
+              ...(response.radiology_tests || [])
+            ];
             const uniqueSuggestions = [
-              ...new Set(response.radiology_tests.map((test) => test.name)),
+              ...new Set(allTests.map((test) => test.name)),
             ].slice(0, 10);
 
             setSuggestions(uniqueSuggestions);
@@ -84,7 +88,7 @@ const SearchBar = ({ onSearch }) => {
     return () => clearTimeout(debounceTimer);
   }, [query, selectedLocation]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -101,7 +105,7 @@ const SearchBar = ({ onSearch }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Events
+  // Handlers
   const handleSearch = (value) => {
     setQuery(value);
     onSearch?.(value);
@@ -125,9 +129,10 @@ const SearchBar = ({ onSearch }) => {
   };
 
   return (
-    <div>
+    <div className="relative w-full max-w-2xl mx-auto">
+
       {/* Search Bar */}
-      <div className="relative flex items-center hover:bg-gray-100 rounded-full px-7 py-4 border border-gray-200 w-full max-w-2xl transition min-height-[60px]">
+      <div className="relative flex items-center hover:bg-gray-100 rounded-full px-7 py-4 border border-gray-200 w-full transition">
 
         <FaSearch className="text-green-500 mr-3" />
 
@@ -140,8 +145,9 @@ const SearchBar = ({ onSearch }) => {
           className="flex-1 bg-transparent outline-none text-sm text-gray-700"
         />
 
+        {/* Animated Placeholder */}
         {!query && (
-          <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-gray-400">
+          <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-gray-400 whitespace-nowrap">
             Search for <span className="text-green-500 font-bold">{currentText}</span>
           </div>
         )}
@@ -160,11 +166,11 @@ const SearchBar = ({ onSearch }) => {
         </button>
       </div>
 
-      {/* Suggestions Dropdown */}
+      {/* Suggestions */}
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto mt-1"
+          className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto mt-2"
         >
           {isLoadingSuggestions ? (
             <div className="px-4 py-3 text-sm text-gray-500 text-center">
@@ -188,4 +194,3 @@ const SearchBar = ({ onSearch }) => {
 };
 
 export default SearchBar;
-    

@@ -61,6 +61,8 @@ const defaultLifestylePackages = [
   },
 ];
 
+const pageSize = 6; // items per page
+
 const Home = () => {
   const navigate = useNavigate();
   const { selectedLocation } = useSelector((state) => state.location);
@@ -73,6 +75,7 @@ const Home = () => {
   const [lifestylePackages, setLifestylePackages] = useState(defaultLifestylePackages);
   const [carouselItems, setCarouselItems] = useState(defaultCarouselItems);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     // Check if location is selected, if not redirect to location selection
@@ -142,7 +145,7 @@ const Home = () => {
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
-    if (query.trim()) {
+    if (query.trim().length >= 3) {
       setIsSearching(true);
       try {
         const cityName = selectedLocation ? selectedLocation.name : 'delhi';
@@ -150,15 +153,19 @@ const Home = () => {
         const response = await apiService.searchTests(query, cityName);
         console.log('Search API Response:', response);
 
-        if (response && response.radiology_tests && response.radiology_tests.length > 0) {
+        if (response && (response.lab_tests?.length > 0 || response.radiology_tests?.length > 0)) {
           // Transform API response to match our UI format
-          const transformedResults = response.radiology_tests.map(test => {
+          const allTests = [
+            ...(response.lab_tests || []),
+            ...(response.radiology_tests || [])
+          ];
+          const transformedResults = allTests.map(test => {
             // Find the lowest price from labs
             const lowestPrice = Math.min(...test.labs.map(lab => lab.price));
             return {
               id: test.id,
               name: test.name,
-              type: 'radiology',
+              type: test.type || 'lab',
               price: `₹${lowestPrice}`,
               originalPrice: lowestPrice,
               labs: test.labs
@@ -167,7 +174,7 @@ const Home = () => {
           console.log('Transformed results:', transformedResults);
           setSearchResults(transformedResults);
         } else {
-          console.log('No radiology tests found');
+          console.log('No tests found');
           setSearchResults([]);
         }
       } catch (error) {
@@ -178,6 +185,8 @@ const Home = () => {
       setIsSearching(false);
       setSearchResults([]);
     }
+    // Reset pagination on new search
+    setCurrentPage(1);
   };
 
   const handleUploadPrescription = () => {
@@ -226,6 +235,7 @@ const Home = () => {
         displayAddress={selectedLocation ? selectedLocation.name : "Detect My Location"}
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
+        onSearch={handleSearch}
       />
 
       {/* Search Bar */}
@@ -275,28 +285,14 @@ const Home = () => {
           <div className="px-4 py-4">
             <h2 className="text-lg font-semibold mb-4">Search Results</h2>
             {searchResults.length > 0 ? (
-              searchResults.map((item) => (
-                <div key={item.id} className="bg-white rounded-lg p-4 mb-2 shadow-sm border">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-600">Radiology Test</p>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="font-semibold text-blue-600 text-lg">{item.price}</p>
-                      <button
-                        onClick={() => isInCart(item.id) ? handleRemoveFromCart(item.id) : handleAddToCart(item)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium mt-2 ${isInCart(item.id)
-                          ? 'bg-red-500 text-white hover:bg-red-600'
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
-                          } transition-colors`}
-                      >
-                        {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+              <SearchResultsSection
+                items={searchResults}
+                isInCart={isInCart}
+                onAddToCart={handleAddToCart}
+                onRemoveFromCart={handleRemoveFromCart}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500">No results found. Try searching for "MRI", "X-Ray", or "CT Scan".</p>
@@ -377,6 +373,74 @@ const Home = () => {
 
       {/* Floating Cart Button */}
       <CartButton itemCount={cartItems.length} onTap={handleViewCart} />
+    </div>
+  );
+};
+
+// -------------------- Search Results Section --------------------
+const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => {
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = items.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(items.length / pageSize);
+
+  return (
+    <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
+        {paginatedItems.map((item) => (
+          <SearchResultCard
+            key={item.id}
+            item={item}
+            isInCart={isInCart}
+            onAddToCart={onAddToCart}
+            onRemoveFromCart={onRemoveFromCart}
+          />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="px-3 py-1">{currentPage} / {totalPages}</span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// -------------------- Search Result Card --------------------
+const SearchResultCard = ({ item, isInCart, onAddToCart, onRemoveFromCart }) => {
+  const lab = item.labs?.[0] || {};
+  return (
+    <div className="bg-white rounded-lg p-4 shadow-sm border">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1">
+          <h3 className="font-medium text-sm mb-1">{item.name}</h3>
+          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
+          <p className="text-xs text-gray-600">{item.type || 'Radiology'}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-semibold text-green-600">{item.price}</p>
+        </div>
+      </div>
+      <button
+        onClick={() => isInCart(item.id) ? onRemoveFromCart(item.id) : onAddToCart(item)}
+        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(item.id) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}
+      >
+        {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
+      </button>
     </div>
   );
 };

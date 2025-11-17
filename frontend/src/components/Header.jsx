@@ -7,7 +7,7 @@ import SearchBar from './SearchBar';
 import logoimage from "../assets/logo/app_logo.png";
 import { FaLocationCrosshairs, FaLocationDot, FaChevronDown } from 'react-icons/fa6';
 
-const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap }) => {
+const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -69,9 +69,9 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap }) => {
               </div>
 
               {/* SearchBar - hidden on mobile, visible on md+ */}
-             <div className="hidden md:flex flex-1 max-w-2xl">
-  <SearchBar />
-</div>
+              <div className="hidden md:flex flex-1 max-w-2xl">
+                <SearchBar onSearch={onSearch} />
+              </div>
               {/* Location Button - mobile only */}
               {onLocationTap && displayAddress && (
                 <button
@@ -209,66 +209,63 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap }) => {
 
 
           {/* Sub-navigation bar */}
-          <nav className="hidden md:block bg-gray-50 border-b border-gray-200 shadow-sm">
-  <div className="max-w-7xl mx-auto px-4 sm:px-8">
-    <div className="flex justify-center md:justify-start items-center space-x-8 py-3 font-semibold select-none text-gray-700">
+          <nav>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">
+              <div className="flex justify-center md:justify-start items-center space-x-8 py-3 font-semibold select-none text-gray-700">
 
-      {[
-        'Booking',
-        'Insights',
-        'Reports',
-        'Add Address',
-        'Address List',
-        { name: 'Popular Package', href: '#popular-packages' },
-        { name: 'Lifestyle Packages', href: '#lifestyle-packages' },
-      ].map((item) => {
-        const isStringItem = typeof item === 'string';
-        const itemName = isStringItem ? item : item.name;
-        const itemHref = isStringItem ? null : item.href;
+                {[
+                  'Booking',
+                  'Insights',
+                  'Reports',
+                  'Add Address',
+                  'Address List',
+                  { name: 'Popular Package', href: '#popular-packages' },
+                  { name: 'Lifestyle Packages', href: '#lifestyle-packages' },
+                ].map((item) => {
+                  const isStringItem = typeof item === 'string';
+                  const itemName = isStringItem ? item : item.name;
+                  const itemHref = isStringItem ? null : item.href;
 
-        const handleClick = (e) => {
-          if (isStringItem) {
-            e.preventDefault();
-            if (itemName === 'Add Address') {
-              navigate('/add-address');
-            } else if (itemName === 'Address List') {
-              navigate('/address-list');
-            } else {
-              // For other string items, could add more routes if needed
-              console.log(`Navigate to ${itemName}`);
-            }
-          }
-          // For object items, let the href handle it
-        };
+                  const handleClick = (e) => {
+                    if (isStringItem) {
+                      e.preventDefault();
+                      if (itemName === 'Add Address') {
+                        navigate('/add-address');
+                      } else if (itemName === 'Address List') {
+                        navigate('/address-list');
+                      } else {
+                        // For other string items, could add more routes if needed
+                        console.log(`Navigate to ${itemName}`);
+                      }
+                    }
+                    // For object items, let the href handle it
+                  };
 
-        return (
-          <a
-            key={itemName}
-            href={itemHref || '#'}
-            onClick={handleClick}
-            className="relative group px-4 py-2 rounded-md transition duration-300 ease-in-out transform hover:scale-105 hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 select-none"
-            aria-label={itemName}
-          >
-            <span className="relative z-10">{itemName}</span>
-            {/* Gradient underline */}
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 to-green-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded"></span>
+                  return (
+                    <a
+                      key={itemName}
+                      href={itemHref || '#'}
+                      onClick={handleClick}
+                      className="relative group px-4 py-2 rounded-md transition duration-300 ease-in-out transform hover:scale-105 hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 select-none"
+                      aria-label={itemName}
+                    >
+                      <span className="relative z-10">{itemName}</span>
+                      {/* Gradient underline */}
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 to-green-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded"></span>
 
-            {/* Glow effect on hover */}
-            <span
-              className="absolute inset-0 rounded-md opacity-0 bg-green-200 blur-md group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"
-              aria-hidden="true"
-            ></span>
-          </a>
-        );
-      })}
-    </div>
-  </div>
-</nav>
-
-
+                      {/* Glow effect on hover */}
+                      <span
+                        className="absolute inset-0 rounded-md opacity-0 bg-green-200 blur-md group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"
+                        aria-hidden="true"
+                      ></span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </nav>
         </div>
       </header>
-
       <Drawer isOpen={isDrawerOpen} onClose={closeDrawer} />
     </>
   );

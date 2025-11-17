@@ -144,6 +144,11 @@ class ApiService {
   }
 }
 
+async searchAllTests(query, cityName) {
+  return api.get(`/search?q=${query}&cityName=${cityName}`)
+           .then(r => r.data);
+}
+
   // --------------- Popular Tests ----------------
   async getAllTests(cityName) {
   return axios.get(`${BackendEndpoints.API_BASE_URL}/tests/all-tests`, {

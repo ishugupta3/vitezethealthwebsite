@@ -7,7 +7,7 @@ import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { apiService } from '../services/apiService';
 
-const pageSize = 10; // items per page
+const pageSize = 15; // items per page
 
 const Pathology = () => {
   const navigate = useNavigate();
