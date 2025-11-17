@@ -159,15 +159,20 @@ async searchAllTests(query, cityName) {
 
   // ---------------- RADIOLOGY TESTS ----------------
   async getRadiologyTests(cityName) {
-    const response = await this.getAllTests(cityName);
-    if (response && response.data) {
-      // Filter tests where lab.type is 'Radiology'
-      const radiologyTests = response.data.filter(test =>
-        test.labs?.some(lab => lab.type === 'Radiology')
-      );
-      return { data: radiologyTests };
+    try {
+      const response = await api.get(`/tests/radiology?city=${cityName}`);
+      console.log('Radiology API response:', response.data);
+      if (response.data && response.data.data) {
+        return { data: response.data.data };
+      } else if (response.data) {
+        return { data: response.data };
+      } else {
+        return { data: [] };
+      }
+    } catch (error) {
+      console.error('Error fetching radiology tests:', error);
+      return { data: [] };
     }
-    return response;
   }
 
 

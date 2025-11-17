@@ -13,6 +13,7 @@ import AboutUs from "./pages/AboutUs";
 import AddAddress from "./pages/AddAddress";
 import AddressList from "./pages/AddressList";
 import Pathology from "./pages/Pathology";
+import Radiology from "./pages/Radiology";
 import PopularPackages from "./pages/PopularPackages";
 import LifestylePackages from "./pages/LifestylePackages";
 import Toast from "./components/Toast";
@@ -37,6 +38,7 @@ function AppContent() {
         <Route path="/add-address" element={<AddAddress />} />
         <Route path="/address-list" element={<AddressList />} />
         <Route path="/pathology" element={<Pathology />} />
+        <Route path="/radiology" element={<Radiology />} />
         <Route path="/popular-packages" element={<PopularPackages />} />
         <Route path="/lifestyle-packages" element={<LifestylePackages />} />
       </Routes>

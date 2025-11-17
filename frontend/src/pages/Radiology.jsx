@@ -50,13 +50,19 @@ const Radiology = () => {
         }
       } else {
         response = await apiService.getRadiologyTests(cityName);
+        console.log('Radiology response in component:', response);
         if (response && response.data) {
+          console.log('Setting tests:', response.data);
           setTests(response.data);
+        } else {
+          console.log('Setting tests to empty array');
+          setTests([]);
         }
       }
     } catch (error) {
       console.error('Error loading radiology tests:', error);
       showToast('Failed to load radiology tests');
+      setTests([]);
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +91,10 @@ const Radiology = () => {
     setCurrentPage(1);
   };
 
+  const handleViewCart = () => {
+    showToast('View cart coming soon');
+  };
+
   const handleAddToCart = (item) => {
     const newCartItems = [...cartItems, item];
     setCartItems(newCartItems);
@@ -99,13 +109,13 @@ const Radiology = () => {
     showToast('Removed from cart');
   };
 
-  const handleViewCart = () => {
-    showToast('View cart coming soon');
-  };
-
   const isInCart = (itemId) => cartItems.some(item => item.id === itemId);
 
   const displayTests = isSearching ? searchResults : tests;
+  console.log('displayTests:', displayTests);
+  console.log('isSearching:', isSearching);
+  console.log('tests:', tests);
+  console.log('searchResults:', searchResults);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -209,15 +219,16 @@ const PopularTests = ({ tests, isInCart, onAddToCart, onRemoveFromCart, currentP
 );
 
 const Section = ({ items, Component, isInCart, onAddToCart, onRemoveFromCart, page, onPageChange }) => {
+  const safeItems = Array.isArray(items) ? items : [];
   const startIndex = (page - 1) * pageSize;
-  const paginatedItems = items.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(items.length / pageSize);
+  const paginatedItems = safeItems.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(safeItems.length / pageSize);
 
   return (
     <div className="mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
         {paginatedItems.map(item => (
-          <Component key={item.id} test={item} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} />
+          <Component key={item.id || item.name} test={item} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} />
         ))}
       </div>
 
