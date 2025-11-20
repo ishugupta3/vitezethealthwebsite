@@ -123,7 +123,7 @@ const LifestylePackages = () => {
               ←
             </button>
             <h1 className="text-2xl font-bold">
-              <span className="text-blue-600">Lifestyle</span> Packages
+              <span className="text-green-600">Lifestyle</span> Packages
             </h1>
           </div>
 
@@ -136,7 +136,7 @@ const LifestylePackages = () => {
                   isInCart={isInCart(pkg.id)}
                   onAddToCart={handleAddToCart}
                   onRemoveFromCart={handleRemoveFromCart}
-                  onViewDetails={() => showToast('View details coming soon')}
+                  onViewDetails={(pkg) => navigate('/package-detail', { state: { package: pkg } })}
                 />
               ))}
             </div>

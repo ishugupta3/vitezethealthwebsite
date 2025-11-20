@@ -99,7 +99,7 @@ const ContactUs = () => {
           <button
             onClick={() => navigate(-1)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="p-2 rounded-md bg-white text-gray-600 shadow-lg shadow-green-300 active:shadow-none focus:outline-none transition-all duration-200 mr-4"
+            className="p-2 rounded-md bg-white text-gray-600 shadow-lg shadow-white active:shadow-none focus:outline-none transition-all duration-200 mr-4"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

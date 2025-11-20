@@ -5,11 +5,13 @@ const PackageCard = ({
   package: pkg,
   isInCart = false,
   onAddToCart,
-  onRemoveFromCart
+  onRemoveFromCart,
+  onViewDetails
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCartAction = async () => {
+  const handleCartAction = async (e) => {
+    e.stopPropagation(); // Prevent triggering card click
     setIsLoading(true);
     try {
       if (isInCart) {
@@ -23,7 +25,10 @@ const PackageCard = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-4 shadow-lg border border-gray-100 mb-4 h-full flex flex-col">
+    <div
+      className="bg-white rounded-3xl p-4 shadow-lg border border-gray-100 mb-4 h-full flex flex-col cursor-pointer hover:shadow-xl transition-shadow duration-200"
+      onClick={() => onViewDetails && onViewDetails(pkg)}
+    >
       {/* Image and Content Row */}
       <div className="flex mb-4 flex-1">
         {/* Image */}
@@ -31,7 +36,7 @@ const PackageCard = ({
           <img
             src={pkg.image || '/placeholder-image.jpg'}
             alt={pkg.name}
-            className="w-full h-40 object-cover rounded-2xl"
+            className="w-full h-50 object-cover rounded-2xl"
             onError={(e) => {
               e.target.src = '/placeholder-image.jpg';
             }}

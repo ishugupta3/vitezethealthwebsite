@@ -9,7 +9,6 @@ const Carousel = ({ items = [] }) => {
       setCurrentIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
         if (nextIndex >= items.length) {
-          // Reset to 0 without animation
           setTimeout(() => {
             if (slideRef.current) {
               slideRef.current.style.transition = 'none';
@@ -20,13 +19,12 @@ const Carousel = ({ items = [] }) => {
                 }
               }, 50);
             }
-          }, 500); // After transition duration
-          return prevIndex; // Keep current for smooth transition
+          }, 500);
+          return prevIndex;
         }
         return nextIndex;
       });
-    }, 3000);
-
+    }, 3500);
     return () => clearInterval(timer);
   }, [items.length]);
 
@@ -39,38 +37,70 @@ const Carousel = ({ items = [] }) => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg">
+    <div className="relative w-full rounded-xl overflow-hidden bg-gradient-to-br from-white-100 to-white-100 shadow-lg">
+      {/* Responsive wrapper: full width 16:9 on mobile, smaller fixed size on laptop */}
       <div
-        ref={slideRef}
-        className="flex transition-transform duration-500 ease-in-out"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        className={`
+          aspect-[16/9] w-full
+          md:aspect-[21/10]
+          md:w-3/5 md:max-w-[720px]
+          bg-black
+          flex items-center justify-center
+          overflow-hidden
+          mx-auto
+        `}
+        style={{ minHeight: '180px' }}
       >
-        {items.map((item, index) => (
-          <div key={index} className="w-full flex-shrink-0">
-            <img
-              src={item.image || '/placeholder-image.jpg'}
-              alt={item.title || `Slide ${index + 1}`}
-              className="w-full h-40 sm:h-56 md:h-72 lg:h-80 xl:h-[400px] 2xl:h-[450px] object-contain object-center"
-              onError={(e) => {
-                e.target.src = '/placeholder-image.jpg';
-              }}
-            />
-          </div>
-        ))}
+        <div
+          ref={slideRef}
+          className="flex transition-transform duration-500 ease-in-out w-full h-full"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {items.map((item, index) => (
+            <div key={index} className="w-full flex-shrink-0 h-full flex items-center justify-center bg-white">
+              <img
+                src={item.image || '/placeholder-image.jpg'}
+                alt={item.title || `Slide ${index + 1}`}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.src = '/placeholder-image.jpg';
+                }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Dots indicator */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
         {items.map((_, index) => (
           <button
             key={index}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex % items.length ? 'bg-white' : 'bg-white/50'
-            }`}
+            className={`
+              w-2 h-1 rounded-full border border-white outline-none transition-colors
+              ${index === currentIndex % items.length ? 'bg-green-500' : 'bg-white hover:bg-white'}
+            `}
             onClick={() => setCurrentIndex(index)}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
+
+      {/* Arrow Controls (Laptop only) */}
+      <button
+        onClick={() => setCurrentIndex((currentIndex - 1 + items.length) % items.length)}
+        className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 justify-center items-center rounded-full bg-white/80 hover:bg-indigo-200 shadow transition"
+        aria-label="Previous"
+      >
+        <span className="text-xl text-green-700">&lt;</span>
+      </button>
+      <button
+        onClick={() => setCurrentIndex((currentIndex + 1) % items.length)}
+        className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 justify-center items-center rounded-full bg-white/80 hover:bg-indigo-200 shadow transition"
+        aria-label="Next"
+      >
+        <span className="text-xl text-green-700">&gt;</span>
+      </button>
     </div>
   );
 };

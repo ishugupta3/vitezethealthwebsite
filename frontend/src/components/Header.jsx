@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logoutUser } from '../store/slices/authSlice';
@@ -7,7 +8,7 @@ import SearchBar from './SearchBar';
 import logoimage from "../assets/logo/app_logo.png";
 import { FaLocationCrosshairs, FaLocationDot, FaChevronDown } from 'react-icons/fa6';
 
-const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch }) => {
+const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch, drawerOnLogo = false }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -50,22 +51,16 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch 
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="flex justify-between items-center h-16">
 
-            {/* Left: Hamburger, Logo, SearchBar, Location */}
+            {/* Left: Logo, SearchBar, Location */}
             <div className="flex items-center space-x-4 flex-1">
-              {/* Hamburger */}
-              <button
-                onClick={toggleDrawer}
-                className="md:hidden p-2 rounded-lg transition-colors duration-300 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500"
-                aria-label="Open menu"
-              >
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-
               {/* Logo */}
               <div className="flex-shrink-0">
-                <img src={logoimage} alt="ZetHealth Logo" className="h-10 w-auto" />
+                <img
+                  src={logoimage}
+                  alt="ZetHealth Logo"
+                  className="h-10 w-auto cursor-pointer"
+                  onClick={toggleDrawer}
+                />
               </div>
 
               {/* SearchBar - hidden on mobile, visible on md+ */}
@@ -209,7 +204,7 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch 
 
 
           {/* Sub-navigation bar */}
-          <nav>
+          <nav className="hidden md:block">
             <div className="max-w-7xl mx-auto px-4 sm:px-8">
               <div className="flex justify-center md:justify-start items-center space-x-8 py-3 font-semibold select-none text-gray-700">
 

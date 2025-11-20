@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -15,7 +15,6 @@ const Radiology = () => {
 
   const [cartItems, setCartItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentQuery, setCurrentQuery] = useState('men');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [tests, setTests] = useState([]);
@@ -29,15 +28,14 @@ const Radiology = () => {
       return;
     }
 
-    loadTests(currentQuery);
+    loadTests();
     loadCartData();
-  }, [selectedLocation, navigate, currentQuery]);
+  }, [selectedLocation, navigate]);
 
   const loadTests = async (query = null) => {
     try {
       setIsLoading(true);
       const cityName = selectedLocation.name.toLowerCase();
-      let response;
 
       if (query && isSearching) {
         // For search, we might need to filter from loaded tests or use a search API
@@ -49,7 +47,7 @@ const Radiology = () => {
           setSearchResults(filtered);
         }
       } else {
-        response = await apiService.getRadiologyTests(cityName);
+        const response = await apiService.getRadiologyTests(cityName);
         console.log('Radiology response in component:', response);
         if (response && response.data) {
           console.log('Setting tests:', response.data);
@@ -73,18 +71,34 @@ const Radiology = () => {
     setCartItems(cart);
   };
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    setCurrentQuery(query);
+  const searchTimeoutRef = useRef(null);
 
-    if (query.trim()) {
-      setIsSearching(true);
-      await loadTests(query);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (query.trim().length >= 3) {
+      searchTimeoutRef.current = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const cityName = selectedLocation.name;
+          const response = await apiService.searchTests(query, cityName);
+          if (response && response.result && response.result.radiology_tests) {
+            setSearchResults(response.result.radiology_tests);
+          } else {
+            setSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        }
+      }, 500); // 500ms debounce
     } else {
       setIsSearching(false);
       setSearchResults([]);
-      setCurrentQuery('men');
-      await loadTests('men');
     }
 
     // Reset pagination on new search
@@ -112,10 +126,6 @@ const Radiology = () => {
   const isInCart = (itemId) => cartItems.some(item => item.id === itemId);
 
   const displayTests = isSearching ? searchResults : tests;
-  console.log('displayTests:', displayTests);
-  console.log('isSearching:', isSearching);
-  console.log('tests:', tests);
-  console.log('searchResults:', searchResults);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -141,7 +151,7 @@ const Radiology = () => {
         onCartTap={handleViewCart}
       />
 
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 block md:hidden">
         <SearchBar
           onSearch={handleSearch}
           placeholder="Search radiology tests..."
@@ -182,18 +192,91 @@ const SearchResults = ({ tests, isInCart, onAddToCart, onRemoveFromCart, current
     {tests.length === 0 ? (
       <p className="text-gray-600">No radiology tests found</p>
     ) : (
-      <Section
+      <SearchResultsSection
         items={tests}
-        Component={TestCard}
         isInCart={isInCart}
         onAddToCart={onAddToCart}
         onRemoveFromCart={onRemoveFromCart}
-        page={currentPage}
+        currentPage={currentPage}
         onPageChange={onPageChange}
       />
     )}
   </div>
 );
+
+// -------------------- Search Results Section --------------------
+// This component is already defined in Pathology.jsx, but Radiology.jsx is missing it.
+// Since Radiology.jsx uses it, we need to define it here or import it.
+// For now, I'll define it inline.
+const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => {
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = items.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(items.length / pageSize);
+
+  return (
+    <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
+        {paginatedItems.map((item) => (
+          <SearchResultCard
+            key={item.id}
+            item={item}
+            isInCart={isInCart}
+            onAddToCart={onAddToCart}
+            onRemoveFromCart={onRemoveFromCart}
+          />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="px-3 py-1">{currentPage} / {totalPages}</span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// -------------------- Search Result Card --------------------
+// This component is already defined in Pathology.jsx, but Radiology.jsx is missing it.
+// Since Radiology.jsx uses it, we need to define it here or import it.
+// For now, I'll define it inline.
+const SearchResultCard = ({ item, isInCart, onAddToCart, onRemoveFromCart }) => {
+  const lab = item.labs?.[0] || {};
+  return (
+    <div className="bg-white rounded-lg p-4 shadow-sm border">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1">
+          <h3 className="font-medium text-sm mb-1">{item.name}</h3>
+          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
+          <p className="text-xs text-gray-600">{item.type || 'Radiology'}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-semibold text-green-600">{item.price}</p>
+        </div>
+      </div>
+      <button
+        onClick={() => isInCart(item.id) ? onRemoveFromCart(item.id) : onAddToCart(item)}
+        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(item.id) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}
+      >
+        {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
+      </button>
+    </div>
+  );
+};
 
 const PopularTests = ({ tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => (
   <div className="px-4 mb-6">

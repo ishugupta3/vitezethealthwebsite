@@ -236,6 +236,7 @@ const Home = () => {
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
         onSearch={handleSearch}
+        drawerOnLogo={true}
       />
 
       {/* Search Bar */}
@@ -303,7 +304,7 @@ const Home = () => {
           // Default Home Content
           <>
             {/* Carousel */}
-            <div className="px-2 py-2">
+            <div className="px-0 md:px-2 py-2">
               <Carousel items={carouselItems} />
             </div>
 
@@ -314,10 +315,10 @@ const Home = () => {
             <div id="popular-packages" className="px-4 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
-                  <span className="text-blue-600">Popular</span> Packages
+                  <span className="text-green-600">Popular</span> Packages
                 </h2>
                 <button
-                  className="text-blue-600 text-sm font-medium"
+                  className="text-green-600 text-sm font-medium"
                   onClick={() => navigate('/popular-packages')}
                 >
                   View all »
@@ -343,10 +344,10 @@ const Home = () => {
             <div id="lifestyle-packages" className="px-4 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
-                  <span className="text-blue-600">Lifestyle</span> Packages
+                  <span className="text-green-600">Lifestyle</span> Packages
                 </h2>
                 <button
-                  className="text-blue-600 text-sm font-medium"
+                  className="text-green-600 text-sm font-medium"
                   onClick={() => navigate('/lifestyle-packages')}
                 >
                   View all »

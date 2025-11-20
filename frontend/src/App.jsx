@@ -16,6 +16,7 @@ import Pathology from "./pages/Pathology";
 import Radiology from "./pages/Radiology";
 import PopularPackages from "./pages/PopularPackages";
 import LifestylePackages from "./pages/LifestylePackages";
+import PackageDetail from "./pages/PackageDetail";
 import Toast from "./components/Toast";
 import Footer from "./components/Footer";
 
@@ -41,6 +42,7 @@ function AppContent() {
         <Route path="/radiology" element={<Radiology />} />
         <Route path="/popular-packages" element={<PopularPackages />} />
         <Route path="/lifestyle-packages" element={<LifestylePackages />} />
+        <Route path="/package-detail" element={<PackageDetail />} />
       </Routes>
       {location.pathname !== "/" && <Footer />}
     </>
