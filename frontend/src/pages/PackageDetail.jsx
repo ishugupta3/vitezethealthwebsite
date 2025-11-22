@@ -128,11 +128,6 @@ const PackageDetail = () => {
               <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold shadow">
                 {pkg.type}
               </span>
-              {pkg.testTime && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700 shadow">
-                  ⏱️ {pkg.testTime}
-                </span>
-              )}
             </div>
           </div>
 
@@ -141,21 +136,6 @@ const PackageDetail = () => {
             <div className="mb-4">
               <h3 className="font-semibold text-gray-800 mb-1">Description</h3>
               <p className="text-gray-700 text-sm leading-relaxed">{pkg.description}</p>
-            </div>
-          )}
-
-          {/* Lab Info */}
-          {(pkg.labName || pkg.labAddress) && (
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-800 mb-1">Lab Information</h3>
-              {pkg.labName && (
-                <p className="text-gray-700 text-sm mb-1">
-                  <span className="font-semibold">Lab:</span> {pkg.labName}
-                </p>
-              )}
-              {pkg.labAddress && (
-                <p className="text-gray-700 text-sm"><span className="font-semibold">Address:</span> {pkg.labAddress}</p>
-              )}
             </div>
           )}
 

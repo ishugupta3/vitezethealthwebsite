@@ -19,6 +19,7 @@ import LifestylePackages from "./pages/LifestylePackages";
 import PackageDetail from "./pages/PackageDetail";
 import Toast from "./components/Toast";
 import Footer from "./components/Footer";
+import card from "./pages/CartPage";
 
 function AppContent() {
   const location = useLocation();
@@ -43,6 +44,7 @@ function AppContent() {
         <Route path="/popular-packages" element={<PopularPackages />} />
         <Route path="/lifestyle-packages" element={<LifestylePackages />} />
         <Route path="/package-detail" element={<PackageDetail />} />
+        <Route path="/CardPage" element={<card />} />
       </Routes>
       {location.pathname !== "/" && <Footer />}
     </>
