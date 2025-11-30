@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Header from '../components/Header';
 import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
+import { addToCart, removeFromCart, selectCartItems } from '../store/slices/cartSlice';
 
 const PackageDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { selectedLocation } = useSelector((state) => state.location);
-
-  const [cartItems, setCartItems] = useState([]);
+  const cartItems = useSelector(selectCartItems);
   const [isLoading, setIsLoading] = useState(false);
 
   const pkg = location.state?.package;
@@ -20,20 +21,12 @@ const PackageDetail = () => {
       navigate(-1);
       return;
     }
-    loadCartData();
   }, [pkg, navigate]);
-
-  const loadCartData = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCartItems(cart);
-  };
 
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
-      const newCartItems = [...cartItems, pkg];
-      setCartItems(newCartItems);
-      localStorage.setItem('cart', JSON.stringify(newCartItems));
+      dispatch(addToCart(pkg));
       showToast('Added to cart');
     } finally {
       setIsLoading(false);
@@ -43,9 +36,7 @@ const PackageDetail = () => {
   const handleRemoveFromCart = () => {
     setIsLoading(true);
     try {
-      const newCartItems = cartItems.filter(item => item.id !== pkg.id);
-      setCartItems(newCartItems);
-      localStorage.setItem('cart', JSON.stringify(newCartItems));
+      dispatch(removeFromCart(pkg.id));
       showToast('Removed from cart');
     } finally {
       setIsLoading(false);

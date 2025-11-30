@@ -1,42 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaTrash } from 'react-icons/fa';
+import { FaTrash } from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux';
 import { showToast } from '../components/Toast';
+import { removeFromCart as removeFromCartAction, clearCart as clearCartAction, selectCartItems } from '../store/slices/cartSlice';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([]);
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
   const [isLoading, setIsLoading] = useState(false);
-  const [showClearCart, setShowClearCart] = useState(false);
-
-  useEffect(() => {
-    loadCartData();
-  }, []);
-
-  const loadCartData = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCartItems(cart);
-    setShowClearCart(cart.length > 0);
-  };
 
   const handleRemoveFromCart = async (itemId) => {
     setIsLoading(true);
     try {
-      const newCartItems = cartItems.filter(item => item.id !== itemId);
-      setCartItems(newCartItems);
-      localStorage.setItem('cart', JSON.stringify(newCartItems));
+      dispatch(removeFromCartAction(itemId));
       showToast('Removed from cart');
-      setShowClearCart(newCartItems.length > 0);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClearCart = () => {
-    setCartItems([]);
-    localStorage.setItem('cart', JSON.stringify([]));
+    dispatch(clearCartAction());
     showToast('Cart cleared');
-    setShowClearCart(false);
   };
 
   const handleCheckout = () => {
@@ -100,7 +87,7 @@ const CartPage = () => {
               </button>
               <h1 className="text-xl font-bold">🛒 My Cart</h1>
             </div>
-            {showClearCart && (
+            {cartItems.length > 0 && (
               <button
                 onClick={handleClearCart}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"

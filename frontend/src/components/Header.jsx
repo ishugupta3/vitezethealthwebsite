@@ -16,6 +16,8 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch,
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
+  const handleCartTap = () => navigate("/CardPage")
+
   const toggleDrawer = () => setIsDrawerOpen(prev => !prev);
   const closeDrawer = () => setIsDrawerOpen(false);
 
@@ -152,7 +154,7 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch,
 
               {/* Cart */}
               <button
-                onClick={onCartTap}
+                onClick={handleCartTap}
                 className="relative p-2 rounded-full hover:bg-green-100 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                 aria-label="Cart"
               >
@@ -182,7 +184,7 @@ const Header = ({ onLocationTap, displayAddress, cartCount, onCartTap, onSearch,
                 </div>
               </button>
               <button
-                onClick={onCartTap}
+                onClick={handleCartTap}
                 className="relative p-2 rounded-full hover:bg-green-100 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                 aria-label="Cart"
               >

@@ -31,6 +31,22 @@ export default defineConfig({
           });
         }
       }
+    },
+    // Middleware to mock /api/get-address-list endpoint
+    middleware: true,
+    setupMiddlewares(middlewares, devServer) {
+      middlewares.unshift((req, res, next) => {
+        if (req.url === '/api/get-address-list') {
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify([
+            { id: 1, name: "Home", address: "123 Main Street" },
+            { id: 2, name: "Office", address: "456 Business Rd" }
+          ]))
+          return
+        }
+        next()
+      })
+      return middlewares
     }
   }
 })
