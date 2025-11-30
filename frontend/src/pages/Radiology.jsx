@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -7,19 +7,16 @@ import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { apiService } from '../services/apiService';
 
-const pageSize = 6; // items per page
+const pageSize = 15; // items per page
 
 const Radiology = () => {
   const navigate = useNavigate();
   const { selectedLocation } = useSelector((state) => state.location);
 
   const [cartItems, setCartItems] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
   const [tests, setTests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [selectedTest, setSelectedTest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -32,35 +29,18 @@ const Radiology = () => {
     loadCartData();
   }, [selectedLocation, navigate]);
 
-  const loadTests = async (query = null) => {
+  const loadTests = async () => {
     try {
       setIsLoading(true);
-      const cityName = selectedLocation.name.toLowerCase();
+      const cityName = selectedLocation.name;
+      const response = await apiService.getRadiologyTests(cityName);
 
-      if (query && isSearching) {
-        // For search, we might need to filter from loaded tests or use a search API
-        // For now, filter from loaded tests
-        if (tests.length > 0) {
-          const filtered = tests.filter(test =>
-            test.name.toLowerCase().includes(query.toLowerCase())
-          );
-          setSearchResults(filtered);
-        }
-      } else {
-        const response = await apiService.getRadiologyTests(cityName);
-        console.log('Radiology response in component:', response);
-        if (response && response.data) {
-          console.log('Setting tests:', response.data);
-          setTests(response.data);
-        } else {
-          console.log('Setting tests to empty array');
-          setTests([]);
-        }
+      if (response && response.status === 200 && response.result) {
+        setTests(response.result.lab_tests || []);
       }
     } catch (error) {
       console.error('Error loading radiology tests:', error);
       showToast('Failed to load radiology tests');
-      setTests([]);
     } finally {
       setIsLoading(false);
     }
@@ -69,44 +49,6 @@ const Radiology = () => {
   const loadCartData = () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     setCartItems(cart);
-  };
-
-  const searchTimeoutRef = useRef(null);
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (query.trim().length >= 3) {
-      searchTimeoutRef.current = setTimeout(async () => {
-        setIsSearching(true);
-        try {
-          const cityName = selectedLocation.name;
-          const response = await apiService.searchTests(query, cityName);
-          if (response && response.result && response.result.radiology_tests) {
-            setSearchResults(response.result.radiology_tests);
-          } else {
-            setSearchResults([]);
-          }
-        } catch (error) {
-          console.error('Search error:', error);
-          setSearchResults([]);
-        }
-      }, 500); // 500ms debounce
-    } else {
-      setIsSearching(false);
-      setSearchResults([]);
-    }
-
-    // Reset pagination on new search
-    setCurrentPage(1);
-  };
-
-  const handleViewCart = () => {
-    showToast('View cart coming soon');
   };
 
   const handleAddToCart = (item) => {
@@ -123,13 +65,11 @@ const Radiology = () => {
     showToast('Removed from cart');
   };
 
-  const isInCart = (itemId) => cartItems.some(item => item.id === itemId);
-
-  const displayTests = isSearching ? searchResults : tests;
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
+  const handleViewCart = () => {
+    showToast('View cart coming soon');
   };
+
+  const isInCart = (itemId) => cartItems.some(item => item.id === itemId);
 
   if (isLoading) {
     return (
@@ -153,29 +93,32 @@ const Radiology = () => {
 
       <div className="px-4 py-4 block md:hidden">
         <SearchBar
-          onSearch={handleSearch}
+          onSearch={() => {}}
           placeholder="Search radiology tests..."
         />
       </div>
 
       <div className="pb-24 pt-4">
-        {isSearching ? (
-          <SearchResults
-            tests={displayTests}
+        {selectedTest ? (
+          <TestDetails
+            test={selectedTest}
+            onBack={() => {
+              setSelectedTest(null);
+              setCurrentPage(1);
+            }}
             isInCart={isInCart}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
           />
         ) : (
-          <PopularTests
-            tests={displayTests}
-            isInCart={isInCart}
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={handleRemoveFromCart}
+          <TestList
+            tests={tests}
+            onTestClick={(test) => {
+              setSelectedTest(test);
+              setCurrentPage(1);
+            }}
             currentPage={currentPage}
-            onPageChange={handlePageChange}
+            onPageChange={setCurrentPage}
           />
         )}
       </div>
@@ -185,45 +128,29 @@ const Radiology = () => {
   );
 };
 
-// -------------------- Helper Components --------------------
-const SearchResults = ({ tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => (
-  <div className="px-4 py-4">
-    <h2 className="text-lg font-semibold mb-4">Search Results</h2>
-    {tests.length === 0 ? (
-      <p className="text-gray-600">No radiology tests found</p>
-    ) : (
-      <SearchResultsSection
-        items={tests}
-        isInCart={isInCart}
-        onAddToCart={onAddToCart}
-        onRemoveFromCart={onRemoveFromCart}
-        currentPage={currentPage}
-        onPageChange={onPageChange}
-      />
-    )}
-  </div>
-);
+const TestList = ({ tests, onTestClick, currentPage, onPageChange }) => {
+  const navigate = useNavigate();
 
-// -------------------- Search Results Section --------------------
-// This component is already defined in Pathology.jsx, but Radiology.jsx is missing it.
-// Since Radiology.jsx uses it, we need to define it here or import it.
-// For now, I'll define it inline.
-const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => {
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedItems = items.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(items.length / pageSize);
+  const paginatedTests = tests.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(tests.length / pageSize);
 
   return (
-    <div className="mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-        {paginatedItems.map((item) => (
-          <SearchResultCard
-            key={item.id}
-            item={item}
-            isInCart={isInCart}
-            onAddToCart={onAddToCart}
-            onRemoveFromCart={onRemoveFromCart}
-          />
+    <div className="px-4 mb-6">
+      <button
+        onClick={() => navigate('/home')}
+        className="mb-4 px-4 py-2 bg-gray-200 rounded-full text-sm font-medium flex items-center gap-2"
+      >
+        <img src="/src/assets/icons/back_arrow.svg" alt="Back" className="w-4 h-4" />
+        Back to Home
+      </button>
+      <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+        <p className="text-lg font-semibold mb-2">Radiology Tests</p>
+        <p className="text-gray-600">Select a test to view available labs</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        {paginatedTests.map(test => (
+          <TestCard key={test.id} test={test} onClick={() => onTestClick(test)} />
         ))}
       </div>
 
@@ -232,7 +159,7 @@ const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, 
           <button
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
           >
             Prev
           </button>
@@ -240,7 +167,7 @@ const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, 
           <button
             disabled={currentPage === totalPages}
             onClick={() => onPageChange(currentPage + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
           >
             Next
           </button>
@@ -250,114 +177,98 @@ const SearchResultsSection = ({ items, isInCart, onAddToCart, onRemoveFromCart, 
   );
 };
 
-// -------------------- Search Result Card --------------------
-// This component is already defined in Pathology.jsx, but Radiology.jsx is missing it.
-// Since Radiology.jsx uses it, we need to define it here or import it.
-// For now, I'll define it inline.
-const SearchResultCard = ({ item, isInCart, onAddToCart, onRemoveFromCart }) => {
-  const lab = item.labs?.[0] || {};
+const TestCard = ({ test, onClick }) => {
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm border">
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1">
-          <h3 className="font-medium text-sm mb-1">{item.name}</h3>
-          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
-          <p className="text-xs text-gray-600">{item.type || 'Radiology'}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-semibold text-green-600">{item.price}</p>
-        </div>
-      </div>
+    <div
+      className="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      <h3 className="font-medium text-sm mb-2">{test.name}</h3>
+      <p className="text-xs text-gray-600">
+        {test.labs ? `${test.labs.length} labs available` : 'Labs available'}
+      </p>
+    </div>
+  );
+};
+
+const TestDetails = ({ test, onBack, isInCart, onAddToCart, onRemoveFromCart }) => {
+  return (
+    <div className="px-4 mb-6">
       <button
-        onClick={() => isInCart(item.id) ? onRemoveFromCart(item.id) : onAddToCart(item)}
-        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(item.id) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}
+        onClick={onBack}
+        className="mb-4 px-4 py-2 bg-gray-200 rounded-full text-sm font-medium flex items-center gap-2"
       >
-        {isInCart(item.id) ? 'Remove' : 'Add to Cart'}
+        <img src="/src/assets/icons/back_arrow.svg" alt="Back" className="w-4 h-4" />
+        Back to Tests
       </button>
-    </div>
-  );
-};
 
-const PopularTests = ({ tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => (
-  <div className="px-4 mb-6">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-bold">
-        <span className="text-green-600">Popular</span> Radiology Tests
-      </h2>
-    </div>
-    {tests.length === 0 ? (
-      <p className="text-gray-600">No radiology tests available</p>
-    ) : (
-      <Section
-        items={tests}
-        Component={TestCard}
-        isInCart={isInCart}
-        onAddToCart={onAddToCart}
-        onRemoveFromCart={onRemoveFromCart}
-        page={currentPage}
-        onPageChange={onPageChange}
-      />
-    )}
-  </div>
-);
+      <h2 className="text-lg font-semibold mb-4">{test.name}</h2>
 
-const Section = ({ items, Component, isInCart, onAddToCart, onRemoveFromCart, page, onPageChange }) => {
-  const safeItems = Array.isArray(items) ? items : [];
-  const startIndex = (page - 1) * pageSize;
-  const paginatedItems = safeItems.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(safeItems.length / pageSize);
-
-  return (
-    <div className="mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-        {paginatedItems.map(item => (
-          <Component key={item.id || item.name} test={item} isInCart={isInCart} onAddToCart={onAddToCart} onRemoveFromCart={onRemoveFromCart} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {test.labs &&
+          test.labs.map((lab, index) => (
+            <LabCard
+              key={`${test.id}-${lab.id ?? index}`}
+              lab={lab}
+              test={test}
+              index={index}
+              isInCart={isInCart}
+              onAddToCart={onAddToCart}
+              onRemoveFromCart={onRemoveFromCart}
+            />
+          ))}
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-2">
-          <button
-            disabled={page === 1}
-            onClick={() => onPageChange(page - 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button
-            disabled={page === totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
-// -------------------- Test Card --------------------
-const TestCard = ({ test, isInCart, onAddToCart, onRemoveFromCart }) => {
-  const lab = test.labs?.[0] || {};
+const LabCard = ({ lab, test, index, isInCart, onAddToCart, onRemoveFromCart }) => {
+  // Unique ID for each lab under a test
+  const labKey = lab.id ?? index;
+  const uniqueId = `${test.id}-${labKey}`;
+
+  // Minimal cart item
+  const item = {
+    id: uniqueId,
+    testId: test.id,
+    testName: test.name,
+    labId: lab.id ?? null,
+    labName: lab.labName,
+    price: lab.price ?? 0,
+    address: lab.labAddress || lab.address || '',
+  };
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
-          <h3 className="font-medium text-sm mb-1">{test.name}</h3>
-          <p className="text-xs text-gray-600 mb-2">{lab.labName || 'N/A'}</p>
-          <p className="text-xs text-gray-600">{lab.type || 'Radiology'}</p>
+          <h3 className="font-medium text-sm mb-1">{lab.labName}</h3>
+          <p className="text-xs text-gray-600 mb-2">
+            {lab.labAddress || lab.address || 'Address not available'}
+          </p>
+          {lab.latitude && lab.longitude && (
+            <p className="text-xs text-gray-600">
+              Lat: {lab.latitude}, Lng: {lab.longitude}
+            </p>
+          )}
         </div>
-        <div className="text-right">
-          <p className="font-semibold text-green-600">₹{lab.price || test.price || 'N/A'}</p>
-        </div>
+
+        <p className="font-semibold text-green-600">₹{lab.price ?? 'N/A'}</p>
       </div>
+
       <button
-        onClick={() => isInCart(test.id) ? onRemoveFromCart(test.id) : onAddToCart(test)}
-        className={`w-full py-2 rounded-full text-sm font-medium ${isInCart(test.id) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}
+        onClick={() =>
+          isInCart(uniqueId)
+            ? onRemoveFromCart(uniqueId)
+            : onAddToCart(item)
+        }
+        className={`w-full py-2 rounded-full text-sm font-medium ${
+          isInCart(uniqueId)
+            ? 'bg-red-500 text-white'
+            : 'bg-green-400 text-white'
+        }`}
       >
-        {isInCart(test.id) ? 'Remove' : 'Add to Cart'}
+        {isInCart(uniqueId) ? 'Remove' : 'Add to Cart'}
       </button>
     </div>
   );

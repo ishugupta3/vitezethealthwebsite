@@ -159,21 +159,20 @@ async searchAllTests(query, cityName) {
 
   // ---------------- RADIOLOGY TESTS ----------------
   async getRadiologyTests(cityName) {
-    try {
-      const response = await api.get(`/tests/radiology?city=${cityName}`);
-      console.log('Radiology API response:', response.data);
-      if (response.data && response.data.data) {
-        return { data: response.data.data };
-      } else if (response.data) {
-        return { data: response.data };
-      } else {
-        return { data: [] };
-      }
-    } catch (error) {
-      console.error('Error fetching radiology tests:', error);
-      return { data: [] };
-    }
+  try {
+    // Make sure we hit the proxy /api/tests/radiology
+    const response = await api.get(`/tests/radiology`, { params: { city: cityName.toUpperCase() } });
+    const data = response.data;
+
+    // Normalize so frontend expects { status, result: { lab_tests: [] } }
+    const lab_tests = Array.isArray(data) ? data : data?.lab_tests || [];
+    return { status: 200, result: { lab_tests } };
+  } catch (error) {
+    console.error('Error fetching radiology tests:', error);
+    return { status: 500, result: { lab_tests: [] } };
   }
+}
+
 
 
   // ---------------- POPULAR PACKAGES ----------------

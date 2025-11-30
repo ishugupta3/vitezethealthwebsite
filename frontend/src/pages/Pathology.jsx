@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import CartButton from '../components/CartButton';
 import { showToast } from '../components/Toast';
 import { apiService } from '../services/apiService';
 
-const pageSize = 6; // items per page
+const pageSize = 18; // items per page
 
 const Pathology = () => {
   const navigate = useNavigate();
@@ -166,6 +167,15 @@ const Pathology = () => {
         cartCount={cartItems.length}
         onCartTap={handleViewCart}
       />
+
+      {/* Arrow button to redirect to home */}
+      <button
+        onClick={() => navigate('/home')}
+        className="fixed top-20 left-4 z-40 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-200 border border-gray-200"
+        aria-label="Go to Home"
+      >
+        <FaArrowLeft className="text-gray-700 text-lg" />
+      </button>
 
       <div className="px-4 py-4 block md:hidden">
         <SearchBar
