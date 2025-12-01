@@ -101,7 +101,7 @@ const Pathology = () => {
               lab_tests: response.result.lab_tests || [],
               packages: response.result.packages || [],
               profile_tests: response.result.profile_tests || [],
-              radiology_tests: response.result.radiology_tests || [],
+              radiology_tests: [], // Exclude radiology_tests for Pathology page
             };
             setSearchResults(normalizedResult);
           } else {
