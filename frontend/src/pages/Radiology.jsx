@@ -14,10 +14,14 @@ const Radiology = () => {
   const { selectedLocation } = useSelector((state) => state.location);
 
   const [cartItems, setCartItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
   const [tests, setTests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTest, setSelectedTest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentSearchPage, setCurrentSearchPage] = useState(1);
 
   useEffect(() => {
     if (!selectedLocation) {
@@ -71,6 +75,35 @@ const Radiology = () => {
 
   const isInCart = (itemId) => cartItems.some(item => item.id === itemId);
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (query.trim().length >= 3) {
+      setIsSearching(true);
+      setTimeout(async () => {
+        try {
+          const cityName = selectedLocation.name;
+          const response = await apiService.searchTests(query, cityName);
+          if (response && response.result) {
+            const radiologyTests = response.result.radiology_tests || [];
+            setSearchResults(radiologyTests);
+          } else {
+            setSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        }
+      }, 500); // 500ms debounce
+    } else {
+      setIsSearching(false);
+      setSearchResults([]);
+    }
+
+    // Reset pagination on new search
+    setCurrentSearchPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -93,13 +126,22 @@ const Radiology = () => {
 
       <div className="px-4 py-4 block md:hidden">
         <SearchBar
-          onSearch={() => {}}
+          onSearch={handleSearch}
           placeholder="Search radiology tests..."
         />
       </div>
 
       <div className="pb-24 pt-4">
-        {selectedTest ? (
+        {isSearching ? (
+          <SearchResults
+            tests={searchResults}
+            isInCart={isInCart}
+            onAddToCart={handleAddToCart}
+            onRemoveFromCart={handleRemoveFromCart}
+            currentPage={currentSearchPage}
+            onPageChange={setCurrentSearchPage}
+          />
+        ) : selectedTest ? (
           <TestDetails
             test={selectedTest}
             onBack={() => {
@@ -151,6 +193,53 @@ const TestList = ({ tests, onTestClick, currentPage, onPageChange }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {paginatedTests.map(test => (
           <TestCard key={test.id} test={test} onClick={() => onTestClick(test)} />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="px-3 py-1">{currentPage} / {totalPages}</span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="px-3 py-1 bg-green-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SearchResults = ({ tests, isInCart, onAddToCart, onRemoveFromCart, currentPage, onPageChange }) => {
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedTests = tests.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(tests.length / pageSize);
+
+  return (
+    <div className="px-4 mb-6">
+      <button
+        onClick={() => window.history.back()}
+        className="mb-4 px-4 py-2 bg-gray-200 rounded-full text-sm font-medium flex items-center gap-2"
+      >
+        <img src="/src/assets/icons/back_arrow.svg" alt="Back" className="w-4 h-4" />
+        Back to Radiology
+      </button>
+      <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+        <p className="text-lg font-semibold mb-2">Search Results</p>
+        <p className="text-gray-600">Radiology tests matching your search</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        {paginatedTests.map(test => (
+          <TestCard key={test.id} test={test} onClick={() => {}} />
         ))}
       </div>
 
